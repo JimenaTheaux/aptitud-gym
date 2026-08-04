@@ -15,6 +15,8 @@ import type { Sucursal } from '../types/db'
 type SucursalContextValue = {
   sucursales: Sucursal[]
   loadingSucursales: boolean
+  errorSucursales: boolean
+  reloadSucursales: () => void
   sucursalId: string | null
   setSucursalId: (id: string | null) => void
 }
@@ -24,29 +26,49 @@ const SucursalContext = createContext<SucursalContextValue | null>(null)
 export function SucursalProvider({ children }: { children: ReactNode }) {
   const [sucursales, setSucursales] = useState<Sucursal[]>([])
   const [loadingSucursales, setLoadingSucursales] = useState(true)
+  const [errorSucursales, setErrorSucursales] = useState(false)
   const [sucursalId, setSucursalId] = useState<string | null>(null)
+  const [intento, setIntento] = useState(0)
 
   useEffect(() => {
     let active = true
 
-    supabase
-      .from('sucursales')
-      .select('*')
-      .order('nombre')
-      .then(({ data }) => {
+    async function cargarSucursales() {
+      setLoadingSucursales(true)
+      setErrorSucursales(false)
+      try {
+        const { data, error } = await supabase.from('sucursales').select('*').order('nombre')
         if (!active) return
+        if (error) throw error
         setSucursales((data as Sucursal[] | null) ?? [])
-        setLoadingSucursales(false)
-      })
+      } catch {
+        if (active) setErrorSucursales(true)
+      } finally {
+        if (active) setLoadingSucursales(false)
+      }
+    }
+
+    cargarSucursales()
 
     return () => {
       active = false
     }
-  }, [])
+  }, [intento])
+
+  function reloadSucursales() {
+    setIntento((n) => n + 1)
+  }
 
   return (
     <SucursalContext.Provider
-      value={{ sucursales, loadingSucursales, sucursalId, setSucursalId }}
+      value={{
+        sucursales,
+        loadingSucursales,
+        errorSucursales,
+        reloadSucursales,
+        sucursalId,
+        setSucursalId,
+      }}
     >
       {children}
     </SucursalContext.Provider>

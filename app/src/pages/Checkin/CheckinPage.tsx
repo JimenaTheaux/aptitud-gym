@@ -19,7 +19,14 @@ const AUTO_RESET_MS = 3000
 
 export function CheckinPage() {
   const { signOut } = useAuth()
-  const { sucursales, loadingSucursales, sucursalId, setSucursalId } = useSucursal()
+  const {
+    sucursales,
+    loadingSucursales,
+    errorSucursales,
+    reloadSucursales,
+    sucursalId,
+    setSucursalId,
+  } = useSucursal()
   const [altaOpen, setAltaOpen] = useState(false)
   const [dniSinRegistrar, setDniSinRegistrar] = useState('')
   const [alumnoActivo, setAlumnoActivo] = useState<Alumno | null>(null)
@@ -27,7 +34,7 @@ export function CheckinPage() {
   const [estadoActivo, setEstadoActivo] = useState<EstadoCuenta | null>(null)
 
   const sucursalActual = sucursales.find((s) => s.id === sucursalId) ?? null
-  const pedirSucursal = !loadingSucursales && !sucursalActual
+  const pedirSucursal = !sucursalActual
 
   useEffect(() => {
     if (!asistenciaMarcada) return
@@ -184,18 +191,38 @@ export function CheckinPage() {
       <Footer prominent />
 
       <Drawer open={pedirSucursal} onClose={() => {}} title="¿Qué sucursal es esta?">
-        <div className="flex flex-col gap-2">
-          {sucursales.map((sucursal) => (
+        {loadingSucursales ? (
+          <div className="flex flex-col gap-2" aria-busy="true" aria-live="polite">
+            <div className="h-12 animate-pulse rounded-[10px] bg-bg-input" />
+            <div className="h-12 animate-pulse rounded-[10px] bg-bg-input" />
+          </div>
+        ) : errorSucursales ? (
+          <div className="flex flex-col items-center gap-3 py-2 text-center">
+            <p className="font-inter text-[13px] text-estado-error-text">
+              No se pudieron cargar las sucursales. Revisá la conexión e intentá de nuevo.
+            </p>
             <button
-              key={sucursal.id}
               type="button"
-              onClick={() => setSucursalId(sucursal.id)}
-              className="rounded-[10px] border border-border-subtle bg-bg-input px-4 py-3 text-left font-montserrat text-[13px] font-bold text-text-primary hover:border-accent-cyan"
+              onClick={reloadSucursales}
+              className="rounded-[10px] bg-accent-cyan px-4 py-2 font-montserrat text-[13px] font-bold text-text-on-accent"
             >
-              {sucursal.nombre}
+              Reintentar
             </button>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {sucursales.map((sucursal) => (
+              <button
+                key={sucursal.id}
+                type="button"
+                onClick={() => setSucursalId(sucursal.id)}
+                className="rounded-[10px] border border-border-subtle bg-bg-input px-4 py-3 text-left font-montserrat text-[13px] font-bold text-text-primary hover:border-accent-cyan"
+              >
+                {sucursal.nombre}
+              </button>
+            ))}
+          </div>
+        )}
       </Drawer>
 
       <AltaAlumnoForm
