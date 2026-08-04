@@ -11,7 +11,7 @@ import { useSucursal } from '../../contexts/SucursalContext'
 import { usePinnedRows } from '../../hooks/usePinnedRows'
 import { deleteAlumno, listAlumnos } from '../../lib/alumnos'
 import { getConfiguracionWhatsapp } from '../../lib/configuracion'
-import { formatearFecha } from '../../lib/formato'
+import { formatearCantidadDias, formatearFecha } from '../../lib/formato'
 import { aplicarPlantilla, linkWhatsapp, registrarWhatsappEnvio } from '../../lib/whatsapp'
 import { AltaAlumnoForm } from './AltaAlumnoForm'
 import type { Alumno, ConfiguracionWhatsapp } from '../../types/db'
@@ -169,6 +169,7 @@ export function AlumnosPage() {
             { header: 'Sucursal', accessor: (a) => sucursalNombre(a.sucursal_alta_id) },
             { header: 'DNI', accessor: (a) => a.dni },
             { header: 'Celular', accessor: (a) => a.celular ?? '—' },
+            { header: 'Días', accessor: (a) => formatearCantidadDias(a.cantidad_dias) ?? '—' },
             {
               header: '',
               accessor: (a) => (

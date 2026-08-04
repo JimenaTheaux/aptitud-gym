@@ -8,7 +8,7 @@
 - Marcar por DNI o nombre.
 - Muestra estado de cuenta al marcar (al día / deuda / parcial), con aviso por color.
 - Autoregistro "¿Primera vez?" junto al teclado → form → marca asistencia al terminar.
-- Datos del alumno: DNI, apellido y nombre, fecha de nacimiento, celular (formato preparado para WhatsApp), campo libre "consideraciones".
+- Datos del alumno: DNI, apellido y nombre, fecha de nacimiento, celular (formato preparado para WhatsApp), **cantidad de días** (opcional: 2 / 3 / 5 / pase libre, migración 11 — antes de "consideraciones", visible en el detalle del alumno, referencia clave al generar cargos), campo libre "consideraciones".
 - Registro de disciplina, fecha y horario de entrada.
 - **Disciplinas de horario fijo** (ej. clases con turno): el alumno elige la disciplina y el sistema toma la franja horaria configurada (`horarios_disciplina`) — solo tienen hora de inicio definida, la hora de fin es opcional/informativa.
 - **Disciplinas de horario libre** (ej. musculación): sin franjas horarias — al marcar, el sistema registra directamente la hora real de entrada, sin pedir ni validar contra un horario configurado.

@@ -6,6 +6,7 @@ import { PeriodoField } from '../../components/ui/PeriodoField'
 import { SelectField } from '../../components/ui/SelectField'
 import { useAuth } from '../../contexts/AuthContext'
 import { createCargo } from '../../lib/cargos'
+import { formatearCantidadDias } from '../../lib/formato'
 import type { Alumno, Cargo, Disciplina } from '../../types/db'
 
 const FORM_ID = 'cargo-form'
@@ -38,6 +39,10 @@ export function CargoFormDrawer({
   const [monto, setMonto] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  const cantidadDiasLabel = formatearCantidadDias(
+    alumnos.find((a) => a.id === alumnoId)?.cantidad_dias ?? null,
+  )
 
   useEffect(() => {
     if (!open) return
@@ -109,6 +114,12 @@ export function CargoFormDrawer({
     >
       <form id={FORM_ID} onSubmit={handleSubmit} className="flex flex-col gap-4 xl:gap-3">
         <AlumnoSelect label="Alumno" alumnos={alumnos} value={alumnoId} onChange={setAlumnoId} required />
+
+        {cantidadDiasLabel && (
+          <p className="-mt-2 font-inter text-[11px] text-text-secondary">
+            Cantidad de días (referencia): <span className="text-text-primary">{cantidadDiasLabel}</span>
+          </p>
+        )}
 
         {/* Período en su propia fila: un grid de 2 columnas lo trunca (ver PeriodoField) */}
         <PeriodoField label="Período" value={periodo} onChange={setPeriodo} required />

@@ -5,7 +5,7 @@ import { DataTable } from '../../components/ui/DataTable'
 import { EstadoCuentaCard } from '../Checkin/EstadoCuentaCard'
 import { listCargosByAlumno } from '../../lib/cargos'
 import { listPagosByAlumno, type PagoConDetalle } from '../../lib/pagos'
-import { formatearFecha, formatearMonto, formatearPeriodo } from '../../lib/formato'
+import { formatearCantidadDias, formatearFecha, formatearMonto, formatearPeriodo } from '../../lib/formato'
 import type { EstadoCuenta } from '../../lib/estadoCuenta'
 import type { Alumno, Cargo } from '../../types/db'
 
@@ -30,6 +30,10 @@ export function HistorialAlumnoSection({
   const [pagos, setPagos] = useState<PagoConDetalle[]>([])
   const [loading, setLoading] = useState(false)
   const [estadoAlumno, setEstadoAlumno] = useState<EstadoCuenta | null>(null)
+
+  const cantidadDiasLabel = formatearCantidadDias(
+    alumnos.find((a) => a.id === alumnoId)?.cantidad_dias ?? null,
+  )
 
   useEffect(() => {
     if (!alumnoId) {
@@ -71,6 +75,12 @@ export function HistorialAlumnoSection({
           >
             <EstadoCuentaCard alumnoId={alumnoId} onEstadoChange={setEstadoAlumno} />
           </div>
+
+          {cantidadDiasLabel && (
+            <p className="font-inter text-[13px] text-text-secondary">
+              Cantidad de días: <span className="text-text-primary">{cantidadDiasLabel}</span>
+            </p>
+          )}
 
           <div>
             <p className="mb-2 font-montserrat text-[13px] font-bold text-text-primary">Cargos</p>

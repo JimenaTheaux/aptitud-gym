@@ -2,13 +2,21 @@ import { useEffect, useId, useState, type FormEvent } from 'react'
 import { DateField } from '../../components/ui/DateField'
 import { Drawer } from '../../components/ui/Drawer'
 import { FormField } from '../../components/ui/FormField'
+import { SelectField } from '../../components/ui/SelectField'
 import { useSucursal } from '../../contexts/SucursalContext'
 import { createAlumno, updateAlumno, DniDuplicadoError } from '../../lib/alumnos'
-import type { Alumno } from '../../types/db'
+import type { Alumno, CantidadDias } from '../../types/db'
 
 const DNI_REGEX = /^\d{6,10}$/
 const FORM_ID = 'alta-alumno-form'
 const CELULAR_PREFIJO = '+549 '
+
+const CANTIDAD_DIAS_OPTIONS: { value: CantidadDias; label: string }[] = [
+  { value: '2', label: '2 días' },
+  { value: '3', label: '3 días' },
+  { value: '5', label: '5 días' },
+  { value: 'pase_libre', label: 'Pase libre' },
+]
 
 function hoyISO() {
   return new Date().toISOString().slice(0, 10)
@@ -43,6 +51,7 @@ export function AltaAlumnoForm({
   const [nombre, setNombre] = useState('')
   const [fechaNacimiento, setFechaNacimiento] = useState('')
   const [celular, setCelular] = useState(CELULAR_PREFIJO)
+  const [cantidadDias, setCantidadDias] = useState<CantidadDias | ''>('')
   const [consideraciones, setConsideraciones] = useState('')
   const [sucursalAltaId, setSucursalAltaId] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -55,6 +64,7 @@ export function AltaAlumnoForm({
     setNombre(alumno?.nombre ?? '')
     setFechaNacimiento(alumno?.fecha_nacimiento ?? '')
     setCelular(alumno?.celular || CELULAR_PREFIJO)
+    setCantidadDias(alumno?.cantidad_dias ?? '')
     setConsideraciones(alumno?.consideraciones ?? '')
     setSucursalAltaId(alumno?.sucursal_alta_id ?? '')
     setErrors({})
@@ -86,6 +96,7 @@ export function AltaAlumnoForm({
         nombre: nombre.trim(),
         fecha_nacimiento: fechaNacimiento || null,
         celular: celularEfectivo(celular) || null,
+        cantidad_dias: cantidadDias || null,
         consideraciones: consideraciones.trim() || null,
         sucursal_alta_id: mode === 'kiosco' ? sucursalActual : sucursalAltaId || null,
       }
@@ -243,6 +254,19 @@ export function AltaAlumnoForm({
             </p>
           </>
         )}
+
+        <SelectField
+          label="Cantidad de días"
+          value={cantidadDias}
+          onChange={(e) => setCantidadDias(e.target.value as CantidadDias | '')}
+        >
+          <option value="">Sin especificar</option>
+          {CANTIDAD_DIAS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </SelectField>
 
         <div className="flex flex-col gap-1.5">
           <label

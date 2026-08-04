@@ -5,6 +5,7 @@
 // + migracion_06_reset_y_pagos_v2.sql + migracion_07_sucursal_horarios_profesor.sql
 // + migracion_10_alumnos_delete_y_configuracion_whatsapp.sql
 // + migracion_09_filas_fijadas.sql
+// + migracion_11_cantidad_dias_alumno.sql
 // Reglas: UUID -> string, NUMERIC/INTEGER -> number, DATE/TIME/TIMESTAMPTZ -> string, enums -> union types
 // No usar `supabase gen types` (ver skills/database-first/SKILL.md)
 
@@ -27,6 +28,8 @@ export type Perfil = {
   created_at: string
 }
 
+export type CantidadDias = '2' | '3' | '5' | 'pase_libre'
+
 export type Alumno = {
   id: string
   dni: string
@@ -34,6 +37,9 @@ export type Alumno = {
   nombre: string
   fecha_nacimiento: string | null
   celular: string | null
+  // Referencia opcional de días por semana — no dispara lógica de precio,
+  // solo dato visible al generar cargos (migración 11).
+  cantidad_dias: CantidadDias | null
   consideraciones: string | null
   sucursal_alta_id: string | null
   estado_manual: string | null

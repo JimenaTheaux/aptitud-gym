@@ -13,6 +13,8 @@ perfiles  -- vinculado a Supabase Auth
 
 alumnos
   id, dni (unique), apellido, nombre, fecha_nacimiento, celular,
+  cantidad_dias (text, nullable — '2' | '3' | '5' | 'pase_libre',
+    migración 11, sirve de referencia al generar cargos),
   consideraciones (text libre), sucursal_alta_id (nullable, informativo —
   confirmado en el form de autoregistro, NO restringe a qué sucursal puede ir),
   estado_manual (nullable), created_at

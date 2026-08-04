@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Alumno } from '../types/db'
+import type { Alumno, CantidadDias } from '../types/db'
 
 export type NuevoAlumnoInput = {
   dni: string
@@ -7,6 +7,7 @@ export type NuevoAlumnoInput = {
   nombre: string
   fecha_nacimiento: string | null
   celular: string | null
+  cantidad_dias: CantidadDias | null
   consideraciones: string | null
   sucursal_alta_id: string | null
 }

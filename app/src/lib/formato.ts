@@ -63,6 +63,18 @@ export function periodoActual(): string {
   return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
 }
 
+const CANTIDAD_DIAS_LABEL: Record<string, string> = {
+  '2': '2 días',
+  '3': '3 días',
+  '5': '5 días',
+  pase_libre: 'Pase libre',
+}
+
+export function formatearCantidadDias(valor: string | null): string | null {
+  if (!valor) return null
+  return CANTIDAD_DIAS_LABEL[valor] ?? valor
+}
+
 // Rango de fechas (inclusive) que cubre un período 'yyyy-MM' — usado para
 // filtrar asistencias.fecha por mes calendario.
 export function rangoDelMes(periodo: string): { inicio: string; fin: string } {
