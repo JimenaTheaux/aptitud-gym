@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual de usuario — Aptitud Centro</title>
+<style>
+  :root {
+    --bg-page: #0B2240;
+    --bg-card: #132C4D;
+    --bg-input: #0F2545;
+    --border-subtle: #1D3B60;
+    --accent-cyan: #2EB9FE;
+    --accent-cyan-soft: rgba(46,185,254,0.12);
+    --text-primary: #FFFFFF;
+    --text-secondary: #7FA9CF;
+    --text-muted: #6089AF;
+    --text-on-accent: #0B2240;
+    --al-dia: #00E68A;
+    --al-dia-bg: rgba(0,230,138,0.15);
+    --pendiente: #FFA23D;
+    --pendiente-bg: rgba(255,162,61,0.15);
+    --deuda: #FF5C5C;
+    --deuda-bg: rgba(255,92,92,0.15);
+    --font-heading: 'Montserrat', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+  }
+
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 800; color: var(--text-primary); margin: 0 0 8px; }
+  p { margin: 0 0 10px; }
+  a { color: var(--accent-cyan); }
+
+  /* ---------- Cover ---------- */
+  .cover {
+    min-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    gap: 18px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .cover img.logo { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 0 0 1px var(--border-subtle); }
+  .cover .brand { font-family: var(--font-heading); font-weight: 800; font-size: 34px; letter-spacing: -0.02em; }
+  .cover .brand span { color: var(--accent-cyan); }
+  .cover .subtitle {
+    font-family: var(--font-heading); font-weight: 700; font-size: 18px;
+    color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .cover .desc { max-width: 480px; color: var(--text-secondary); font-size: 14px; }
+  .cover .date-pill {
+    margin-top: 10px; display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--border-subtle); background: var(--bg-card);
+    padding: 8px 16px; border-radius: 99px; font-size: 13px; color: var(--text-secondary);
+  }
+  .cover .print-hint {
+    margin-top: 28px; font-size: 12px; color: var(--text-muted); max-width: 420px;
+  }
+
+  /* ---------- TOC ---------- */
+  .toc { padding: 48px 0 24px; }
+  .toc h2 { font-size: 22px; margin-bottom: 4px; }
+  .toc .toc-lead { color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; }
+  .toc-group { margin-bottom: 22px; }
+  .toc-group h3 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--accent-cyan); border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px; margin-bottom: 10px;
+  }
+  .toc-group ol { margin: 0; padding-left: 20px; }
+  .toc-group li { margin-bottom: 6px; }
+  .toc-group a { text-decoration: none; color: var(--text-primary); font-size: 14px; }
+  .toc-group a:hover { color: var(--accent-cyan); }
+  .toc-group .tag-proximamente { color: var(--text-muted); font-size: 11px; margin-left: 6px; }
+
+  /* ---------- Role section headers ---------- */
+  .role-section { padding-top: 36px; }
+  .role-header {
+    display: flex; align-items: center; gap: 12px;
+    border-top: 3px solid var(--accent-cyan);
+    padding-top: 18px; margin-bottom: 22px;
+  }
+  .role-header .role-badge {
+    font-family: var(--font-heading); font-weight: 800; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    background: var(--accent-cyan-soft); color: var(--accent-cyan);
+    border: 1px solid var(--accent-cyan); border-radius: 8px; padding: 6px 12px;
+  }
+  .role-header h2 { font-size: 20px; margin: 0; }
+  .role-lead { color: var(--text-secondary); font-size: 13px; margin: -10px 0 20px; }
+
+  /* ---------- Intro / legend box ---------- */
+  .intro-box {
+    background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px;
+    padding: 20px 22px; margin-bottom: 18px;
+  }
+  .intro-box h3 { font-size: 15px; margin-bottom: 8px; }
+  .intro-box p { font-size: 13.5px; color: var(--text-secondary); }
+  .estado-legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 4px; }
+  .estado-chip {
+    display: inline-flex; align-items: center; gap: 8px; border-radius: 99px;
+    padding: 7px 14px; font-family: var(--font-body); font-weight: 600; font-size: 12.5px;
+  }
+  .estado-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .estado-chip.al-dia { background: var(--al-dia-bg); color: var(--al-dia); }
+  .estado-chip.al-dia .dot { background: var(--al-dia); }
+  .estado-chip.pendiente { background: var(--pendiente-bg); color: var(--pendiente); }
+  .estado-chip.pendiente .dot { background: var(--pendiente); }
+  .estado-chip.deuda { background: var(--deuda-bg); color: var(--deuda); }
+  .estado-chip.deuda .dot { background: var(--deuda); }
+
+  /* ---------- Screen card ---------- */
+  .screen {
+    background: var(--bg-card); border: 1px solid var(--border-subtle);
+    border-top: 4px solid var(--accent-cyan); border-radius: 16px;
+    padding: 24px 26px; margin-bottom: 22px;
+    scroll-margin-top: 16px;
+  }
+  .screen.proximamente { border-top-color: var(--text-muted); }
+  .screen-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .screen h3 { font-size: 18px; }
+  .screen .num-tag {
+    font-family: var(--font-heading); font-weight: 800; font-size: 11px; color: var(--text-muted);
+    letter-spacing: 0.06em;
+  }
+  .proximamente-pill {
+    display: inline-block; font-family: var(--font-heading); font-weight: 700; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+    border: 1px solid var(--border-subtle); border-radius: 99px; padding: 4px 10px; margin-left: 8px; vertical-align: middle;
+  }
+
+  .screen h4 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);
+    margin: 18px 0 8px;
+  }
+  .screen h4:first-of-type { margin-top: 4px; }
+  .screen p.que-es { font-size: 14.5px; color: var(--text-primary); }
+
+  .screen ol { margin: 0; padding-left: 20px; font-size: 14px; color: var(--text-primary); }
+  .screen ol li { margin-bottom: 6px; }
+
+  .check-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .check-list li {
+    display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px;
+    background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 10px;
+    padding: 9px 12px;
+  }
+  .check-list input[type="checkbox"] {
+    margin-top: 2px; width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--accent-cyan);
+  }
+
+  .diff-box {
+    margin-top: 16px; border: 1px solid var(--border-subtle); border-left: 3px solid var(--accent-cyan);
+    background: var(--bg-input); border-radius: 0 10px 10px 0; padding: 12px 16px;
+  }
+  .diff-box .diff-label {
+    font-family: var(--font-heading); font-weight: 700; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--accent-cyan); margin-bottom: 6px; display: block;
+  }
+  .diff-box p { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+
+  .nota-box {
+    margin-top: 14px; border: 1px solid var(--pendiente); background: var(--pendiente-bg);
+    border-radius: 10px; padding: 10px 14px; font-size: 12.5px; color: var(--pendiente);
+  }
+
+  /* ---------- Bug report ---------- */
+  .bugs-section { padding-top: 40px; }
+  table.bugs { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  table.bugs th, table.bugs td {
+    border: 1px solid var(--border-subtle); padding: 10px; font-size: 12.5px; text-align: left; vertical-align: top;
+  }
+  table.bugs th {
+    background: var(--bg-input); font-family: var(--font-heading); font-weight: 700; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary);
+  }
+  table.bugs td { height: 34px; color: var(--text-primary); }
+  table.bugs col.col-pantalla { width: 22%; }
+  table.bugs col.col-que-paso { width: 40%; }
+  table.bugs col.col-repro { width: 38%; }
+
+  /* ---------- Footer ---------- */
+  footer.doc-footer {
+    margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border-subtle);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px;
+    font-size: 11px; color: var(--text-secondary); text-align: center;
+  }
+  footer.doc-footer img { height: 14px; width: auto; opacity: 0.8; }
+
+  .back-to-toc { display: inline-block; margin-top: 4px; font-size: 11.5px; color: var(--text-secondary); text-decoration: none; }
+  .back-to-toc:hover { color: var(--accent-cyan); }
+
+  /* ---------- Print ---------- */
+  @media print {
+    body { background: #FFFFFF !important; color: #14202E !important; font-size: 12px; }
+    .wrap { max-width: 100%; padding: 0 8px; }
+    .cover { min-height: 0; page-break-after: always; border-bottom: none; }
+    .cover .brand, .cover h1, .role-header h2, .screen h3, .toc h2 { color: #0B2240 !important; }
+    .cover .subtitle, .role-lead, .intro-box p, .screen p, .check-list li, .diff-box p { color: #33465C !important; }
+    .toc { page-break-after: always; }
+    .role-section { page-break-before: always; padding-top: 0; }
+    .role-header { border-top-color: #0B2240; }
+    .role-header .role-badge { background: #E7F6FF !important; color: #0B2240 !important; border-color: #0B2240 !important; }
+    .screen { page-break-inside: avoid; border: 1px solid #C7D3E0 !important; background: #F7FAFD !important; border-top: 4px solid #2EB9FE !important; }
+    .intro-box { background: #F7FAFD !important; border-color: #C7D3E0 !important; }
+    .check-list li { background: #FFFFFF !important; border-color: #C7D3E0 !important; }
+    .diff-box { background: #FFFFFF !important; border-color: #C7D3E0 !important; }
+    .estado-chip.al-dia { background: #E4FBF0 !important; }
+    .estado-chip.pendiente { background: #FFF3E4 !important; }
+    .estado-chip.deuda { background: #FFE9E9 !important; }
+    a { color: #0B2240 !important; text-decoration: underline; }
+    .back-to-toc { display: none; }
+    table.bugs th { background: #F0F4F8 !important; color: #33465C !important; }
+    table.bugs td, table.bugs th { border-color: #C7D3E0 !important; color: #14202E !important; }
+    .bugs-section { page-break-before: always; }
+    footer.doc-footer { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- PORTADA -->
+<!-- ============================================================ -->
+<div class="cover">
+  <img class="logo" src="data:image/png;base64,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" alt="Aptitud Centro" />
+  <div class="brand">Aptitud <span>Centro</span></div>
+  <div class="subtitle">Manual de usuario — Fase 1</div>
+  <p class="desc">
+    Guía práctica de cada pantalla del sistema, pensada para las administradoras del gimnasio.
+    Incluye qué es cada pantalla, cómo se usa y qué probar antes de la entrega.
+  </p>
+  <div class="date-pill">📅 Agosto 2026 · Primera entrega (Fase 1 — MVP)</div>
+  <p class="print-hint">
+    Este documento se puede leer en pantalla o imprimir a PDF directo desde el navegador (Ctrl/Cmd + P).
+    No necesita internet para abrirse.
+  </p>
+</div>
+
+<div class="wrap">
+
+<!-- ============================================================ -->
+<!-- ÍNDICE -->
+<!-- ============================================================ -->
+<div class="toc" id="indice">
+  <h2>Índice</h2>
+  <p class="toc-lead">Tocá cualquier pantalla para ir directo a su sección.</p>
+
+  <div class="toc-group">
+    <h3>Antes de empezar</h3>
+    <ol>
+      <li><a href="#antes-de-empezar">Cómo entrar y cómo leer los colores del sistema</a></li>
+    </ol>
+  </div>
+
+  <div class="toc-group">
+    <h3>Kiosco (Alumnos)</h3>
+    <ol>
+      <li><a href="#k1-checkin">Check-in — Buscar y marcar asistencia</a></li>
+      <li><a href="#k2-alta">Alta de alumno nuevo ("¿Primera vez?")</a></li>
+    </ol>
+  </div>
+
+  <div class="toc-group">
+    <h3>Profesor</h3>
+    <ol>
+      <li><a href="#p1-mi-turno">Inicio — Mi turno (entrada y salida)</a></li>
+      <li><a href="#p2-alumnos">Alumnos (listado)</a></li>
+      <li><a href="#p3-asistencia">Asistencia (listado de asistencias)</a></li>
+      <li><a href="#p4-pagos">Pagos — Registrar pago y mi historial</a></li>
+      <li><a href="#p5-resumen-turno">Resumen de turno</a></li>
+    </ol>
+  </div>
+
+  <div class="toc-group">
+    <h3>Admin</h3>
+    <ol>
+      <li><a href="#a1-inicio">Inicio (panel principal) <span class="tag-proximamente">— Próximamente</span></a></li>
+      <li><a href="#a2-historial-pagos">Pagos — Historial completo de pagos</a></li>
+      <li><a href="#a3-pendientes">Pagos — Pendientes de validar</a></li>
+      <li><a href="#a4-sin-cargo">Pagos — Sin cargo generado</a></li>
+      <li><a href="#a5-deudores">Pagos — Deudores</a></li>
+      <li><a href="#a6-disciplinas">Configuración — Disciplinas</a></li>
+      <li><a href="#a7-profesores">Configuración — Profesores</a></li>
+      <li><a href="#a8-whatsapp">Configuración — WhatsApp</a></li>
+      <li><a href="#a9-resumen-profesores">Resúmenes — Profesores</a></li>
+      <li><a href="#a10-resumen-turnos">Resúmenes — Turnos <span class="tag-proximamente">— Próximamente</span></a></li>
+    </ol>
+  </div>
+
+  <div class="toc-group">
+    <h3>Cierre</h3>
+    <ol>
+      <li><a href="#reporte-bugs">Reporte de bugs — planilla para completar</a></li>
+    </ol>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ANTES DE EMPEZAR -->
+<!-- ============================================================ -->
+<div class="role-section" id="antes-de-empezar">
+  <div class="role-header">
+    <span class="role-badge">Guía rápida</span>
+    <h2>Antes de empezar</h2>
+  </div>
+
+  <div class="intro-box">
+    <h3>Cómo entrar</h3>
+    <p>
+      En la pantalla de ingreso hay 3 pestañas: <strong>Admin</strong>, <strong>Profesor</strong> y <strong>Alumnos</strong> (la del kiosco).
+      Elegís la que corresponda y entrás con usuario y contraseña. Las 3 admins comparten el mismo usuario
+      de administrador — no hay una cuenta por persona. Si alguien se olvida la contraseña, no se cambia
+      sola desde la app: hay que avisarle a deciDATA para que la restablezca.
+    </p>
+    <p>
+      En algunas pantallas de admin vas a ver un selector de sucursal arriba. En esta primera entrega
+      solo hay una sucursal en uso, así que ese selector va a estar fijo y sin poder tocarse — no es un error,
+      está preparado para cuando se sume la segunda sucursal.
+    </p>
+  </div>
+
+  <div class="intro-box">
+    <h3>Cómo leer los colores del sistema</h3>
+    <p>En varias pantallas vas a ver el estado de cuenta de un alumno con este color:</p>
+    <div class="estado-legend">
+      <span class="estado-chip al-dia"><span class="dot"></span>Al día — pagó lo que corresponde este mes</span>
+      <span class="estado-chip pendiente"><span class="dot"></span>Pendiente — pagó una parte, falta el resto</span>
+      <span class="estado-chip deuda"><span class="dot"></span>Deuda — no pagó nada este mes</span>
+    </div>
+    <p style="margin-top:10px;">
+      Un alumno con deuda igual puede entrenar — el color es solo un aviso para el profesor o la admin,
+      no bloquea el ingreso al gimnasio.
+    </p>
+  </div>
+
+  <div class="intro-box">
+    <h3>El alfiler de "fijar fila" (solo Admin)</h3>
+    <p>
+      En las tablas de Alumnos, Asistencias, Deudores, Sin cargo generado, Pendientes de validar e
+      Historial de pagos vas a ver un ícono de alfiler al lado de cada fila. Sirve para fijar arriba de
+      todo las filas que usás seguido — por ejemplo, un alumno con el que estás en seguimiento. El máximo
+      es 5 filas fijadas por tabla.
+    </p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- KIOSCO -->
+<!-- ============================================================ -->
+<div class="role-section" id="kiosco">
+  <div class="role-header">
+    <span class="role-badge">Kiosco (Alumnos)</span>
+    <h2>Pantallas de la tablet de entrada</h2>
+  </div>
+  <p class="role-lead">Usadas por el alumno mismo, sin necesidad de ayuda — la tablet queda con la sesión abierta todo el día.</p>
+
+  <div class="screen" id="k1-checkin">
+    <div class="screen-title-row">
+      <h3>1. Check-in — Buscar y marcar asistencia</h3>
+      <span class="num-tag">KIOSCO</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">
+      La pantalla principal de la tablet en la entrada del gimnasio. El alumno busca su ficha por DNI o
+      por nombre y marca que llegó a entrenar. De paso, ve si tiene la cuota al día.
+    </p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Elegís "Por DNI" o "Por nombre" arriba del teclado.</li>
+      <li>Escribís el DNI (teclado en pantalla) o el nombre (teclado físico) — los resultados aparecen mientras se escribe, sin botón de buscar.</li>
+      <li>Tocás al alumno en la lista de resultados.</li>
+      <li>Aparece el estado de cuenta (Al día / Pendiente / Deuda) — si debe, se avisa pero igual se puede seguir.</li>
+      <li>Elegís la disciplina. Si tiene horarios fijos (por ejemplo una clase), elegís el horario. Si es de horario libre (por ejemplo musculación), el sistema toma la hora exacta en la que estás parado ahí.</li>
+      <li>Confirmás. La pantalla vuelve sola a la búsqueda a los 3 segundos, lista para el próximo alumno.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Buscar un alumno existente por DNI completo y marcar asistencia en una disciplina de horario fijo.</li>
+      <li><input type="checkbox"> Buscar el mismo alumno por apellido/nombre y confirmar que aparece en la lista.</li>
+      <li><input type="checkbox"> Marcar asistencia en una disciplina de horario libre (ej. musculación) y confirmar que la hora registrada es la hora real, no una franja fija.</li>
+      <li><input type="checkbox"> Marcar asistencia de un alumno con deuda y confirmar que el aviso rojo aparece pero NO bloquea el registro de la asistencia.</li>
+      <li><input type="checkbox"> Marcar asistencia de un alumno con un cargo de $0 (clase de prueba/cortesía) y confirmar que figura "Al día".</li>
+      <li><input type="checkbox"> Escribir un DNI que no existe en el sistema y confirmar que aparece la opción "¿Primera vez?".</li>
+      <li><input type="checkbox"> Esperar los 3 segundos después de confirmar y verificar que la pantalla vuelve sola a la búsqueda.</li>
+      <li><input type="checkbox"> Tocar "Limpiar búsqueda" a mitad de una búsqueda y confirmar que se vacía todo.</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="k2-alta">
+    <div class="screen-title-row">
+      <h3>2. Alta de alumno nuevo ("¿Primera vez?")</h3>
+      <span class="num-tag">KIOSCO</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">
+      El formulario que completa un alumno la primera vez que viene al gimnasio. El mismo formulario
+      también lo puede usar una admin o un profesor desde el listado de Alumnos.
+    </p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Tocás "¿Primera vez?" arriba a la derecha del check-in.</li>
+      <li>Completás DNI, apellido y nombre — son obligatorios.</li>
+      <li>Opcional: fecha de nacimiento, celular (para poder mandar WhatsApp después) y "Consideraciones" (lesiones, alergias, cualquier nota libre para el profesor).</li>
+      <li>Guardás. Desde el kiosco, automáticamente pasa al paso de marcar asistencia con ese alumno recién creado.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Dar de alta un alumno completo (todos los campos) desde el kiosco y confirmar que después pide marcar asistencia.</li>
+      <li><input type="checkbox"> Dar de alta un alumno solo con los campos obligatorios (DNI, apellido, nombre), sin celular ni fecha de nacimiento.</li>
+      <li><input type="checkbox"> Intentar cargar un DNI que ya existe en el sistema y confirmar que avisa que está duplicado.</li>
+      <li><input type="checkbox"> Cargar un celular y confirmar que queda con el formato correcto para WhatsApp (+549 + código de área + número).</li>
+      <li><input type="checkbox"> Poner una fecha de nacimiento futura y confirmar que el sistema no deja guardar.</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PROFESOR -->
+<!-- ============================================================ -->
+<div class="role-section" id="profesor">
+  <div class="role-header">
+    <span class="role-badge">Profesor</span>
+    <h2>Pantallas del usuario de profesor</h2>
+  </div>
+  <p class="role-lead">Usadas con el usuario compartido de profesores. Algunas también las ve Admin, con permisos extra — está marcado en cada caso.</p>
+
+  <div class="screen" id="p1-mi-turno">
+    <div class="screen-title-row">
+      <h3>3. Inicio — Mi turno (entrada y salida)</h3>
+      <span class="num-tag">PROFESOR</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">
+      La primera pantalla que ve el usuario de profesor al entrar. Ahí cada profesor marca cuándo empieza
+      y cuándo termina su turno de trabajo en el gimnasio.
+    </p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Buscás tu tarjeta entre las de todos los profesores del roster.</li>
+      <li>Si no tenés un turno abierto, tocás "Registrar entrada" — tu tarjeta pasa a "En turno".</li>
+      <li>Cuando te vas, volvés a esta pantalla y tocás "Registrar salida" en tu misma tarjeta.</li>
+      <li>Abajo hay una tabla con el historial del mes: fecha, entrada, salida y las horas trabajadas, ya calculadas.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Registrar una entrada y confirmar que la tarjeta pasa a "En turno".</li>
+      <li><input type="checkbox"> Registrar la salida de ese turno y confirmar que aparece en la tabla de abajo con las horas ya calculadas.</li>
+      <li><input type="checkbox"> Confirmar que no aparece la opción de "Registrar salida" si todavía no marcaste entrada.</li>
+      <li><input type="checkbox"> Cambiar el período (mes) arriba de la tabla y confirmar que se actualiza.</li>
+    </ul>
+
+    <div class="diff-box">
+      <span class="diff-label">Diferencias si entrás como Admin</span>
+      <p>
+        Ves esta misma pantalla como la pestaña "Profesores" dentro de "Asistencia". Además de las tarjetas,
+        podés editar la fecha u hora de un registro ya cargado, o eliminarlo directamente desde la tabla
+        (con confirmación antes de borrar).
+      </p>
+      <ul class="check-list">
+        <li><input type="checkbox"> (Admin) Editar la hora de entrada de un registro ya cerrado y guardar el cambio.</li>
+        <li><input type="checkbox"> (Admin) Eliminar un registro de prueba y confirmar que desaparece de la tabla.</li>
+      </ul>
+    </div>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="p2-alumnos">
+    <div class="screen-title-row">
+      <h3>4. Alumnos (listado)</h3>
+      <span class="num-tag">PROFESOR</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">La lista completa de alumnos del gimnasio, con sus datos de contacto.</p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Entrás desde "Alumnos" en el menú.</li>
+      <li>Buscás por apellido, nombre o DNI arriba de la tabla — filtra mientras escribís.</li>
+      <li>Los alumnos dados de alta más recientemente aparecen primero.</li>
+      <li>Con el lápiz editás los datos de un alumno. Con el ícono de WhatsApp le mandás el mensaje de bienvenida (si tiene celular cargado).</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Buscar un alumno por apellido y confirmar que filtra bien.</li>
+      <li><input type="checkbox"> Buscar por DNI parcial (unos pocos números) y confirmar que también encuentra resultados.</li>
+      <li><input type="checkbox"> Editar los datos de un alumno existente (por ejemplo, agregarle el celular que no tenía cargado) y guardar.</li>
+      <li><input type="checkbox"> Enviar WhatsApp de bienvenida a un alumno con celular cargado y confirmar que abre WhatsApp con el mensaje ya escrito.</li>
+      <li><input type="checkbox"> Confirmar que el botón de WhatsApp aparece deshabilitado en un alumno sin celular cargado.</li>
+    </ul>
+
+    <div class="diff-box">
+      <span class="diff-label">Diferencias si entrás como Admin</span>
+      <p>
+        Además podés fijar una fila arriba de la lista con el alfiler (máximo 5) y eliminar un alumno
+        (con confirmación) — al eliminarlo se borra también todo su historial de asistencias, cargos y pagos.
+      </p>
+      <ul class="check-list">
+        <li><input type="checkbox"> (Admin) Fijar un alumno con el alfiler y confirmar que queda arriba de la lista.</li>
+        <li><input type="checkbox"> (Admin) Eliminar un alumno de prueba y confirmar que primero pide confirmación.</li>
+      </ul>
+    </div>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="p3-asistencia">
+    <div class="screen-title-row">
+      <h3>5. Asistencia (listado de asistencias)</h3>
+      <span class="num-tag">PROFESOR</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">El historial de todas las asistencias marcadas por los alumnos, con filtros para encontrar una en particular.</p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Entrás desde "Asistencia" en el menú.</li>
+      <li>Filtrás por fecha, por disciplina, o buscás un alumno puntual (nombre o DNI).</li>
+      <li>"Limpiar filtros" saca todos los filtros de una sola vez.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Filtrar por una fecha puntual y confirmar que solo aparecen las asistencias de ese día.</li>
+      <li><input type="checkbox"> Filtrar por disciplina y confirmar que filtra correctamente.</li>
+      <li><input type="checkbox"> Buscar por el DNI de un alumno y confirmar que aparece su historial completo.</li>
+      <li><input type="checkbox"> Combinar dos filtros a la vez (fecha + disciplina) y confirmar que el resultado respeta ambos.</li>
+    </ul>
+
+    <div class="diff-box">
+      <span class="diff-label">Diferencias si entrás como Admin</span>
+      <p>
+        Tenés arriba las pestañas "Alumnos" / "Profesores" (esta pantalla es "Alumnos"), podés fijar filas,
+        y con el lápiz editás cualquier dato de una asistencia ya cargada — alumno, disciplina, fecha, hora
+        o sucursal. Útil por ejemplo si alguien se equivocó de disciplina al marcar.
+      </p>
+      <ul class="check-list">
+        <li><input type="checkbox"> (Admin) Editar la disciplina de una asistencia ya cargada y guardar el cambio.</li>
+        <li><input type="checkbox"> (Admin) Fijar una fila y confirmar que se mantiene arriba de la lista aunque cambies el filtro.</li>
+      </ul>
+    </div>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="p4-pagos">
+    <div class="screen-title-row">
+      <h3>6. Pagos — Registrar pago y mi historial</h3>
+      <span class="num-tag">PROFESOR</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">
+      Desde acá se anota que un alumno pagó la cuota (o parte de ella), y se puede consultar el historial
+      de pagos y el estado de cuenta de cualquier alumno.
+    </p>
+
+    <h4>Cómo se usa — registrar un pago</h4>
+    <ol>
+      <li>Tocás "Registrar pago" arriba de la pantalla.</li>
+      <li>Completás, en este orden: sucursal, fecha del pago (ya viene con la fecha de hoy), quién del equipo lo recibió, tipo de pago (Cuota / Media cuota / Inicio de caja), el alumno, la disciplina, el período (mes) al que corresponde, un detalle libre si hace falta, el monto, y la forma de pago (efectivo / transferencia / combinado).</li>
+      <li>Si elegís "Combinado", aparecen 2 campos más (cuánto en efectivo y cuánto en transferencia) — entre los dos tienen que sumar exactamente el monto total.</li>
+      <li>Guardás. Como lo registra un profesor, el pago queda <strong>pendiente de validación</strong> — todavía no se refleja en el estado de cuenta hasta que una admin lo valide.</li>
+    </ol>
+
+    <h4>Cómo se usa — ver el historial</h4>
+    <ol>
+      <li>En "Historial y estado de cuenta", elegís un alumno.</li>
+      <li>Ves su estado actual (Al día / Pendiente / Deuda), todos los cargos que tiene generados, y todos sus pagos con el estado de cada uno (validado o pendiente).</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Registrar un pago en efectivo completo y confirmar que queda "pendiente de validación" en el historial del alumno.</li>
+      <li><input type="checkbox"> Registrar un pago combinado (parte efectivo, parte transferencia) que sume el monto total, y confirmar que se guarda.</li>
+      <li><input type="checkbox"> Intentar registrar un pago combinado donde efectivo + transferencia NO suman el monto total, y confirmar que el sistema no deja guardar.</li>
+      <li><input type="checkbox"> Registrar un pago de un alumno que todavía no tiene el cargo del mes generado (pago adelantado) y confirmar que se guarda igual.</li>
+      <li><input type="checkbox"> Buscar en el historial a un alumno sin ningún cargo ni pago cargado, y confirmar que se ve claro que no tiene nada.</li>
+      <li><input type="checkbox"> Tildar "Es un pago parcial" al registrar un pago y confirmar que se guarda con esa marca (este campo no tiene una regla automática asociada — es solo una nota manual para dejar constancia).</li>
+    </ul>
+
+    <div class="diff-box">
+      <span class="diff-label">Diferencias si entrás como Admin</span>
+      <p>
+        Ves además las pestañas "Historial de pagos", "Pendientes de validar", "Sin cargo generado" y
+        "Deudores" (cada una tiene su propia sección más abajo en este manual). Un pago que registrás vos
+        como admin queda validado al instante, sin pasar por "pendiente".
+      </p>
+    </div>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="p5-resumen-turno">
+    <div class="screen-title-row">
+      <h3>7. Resumen de turno</h3>
+      <span class="num-tag">PROFESOR</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">
+      Un resumen de la actividad de la semana y del mes: cuántas asistencias hubo, cuántos alumnos
+      distintos vinieron, cuántos alumnos nuevos se dieron de alta, y en qué horarios hay más movimiento.
+    </p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Es solo para consultar, no tiene botones de acción.</li>
+      <li>Entrás y ves los números de la semana actual y del mes actual, uno al lado del otro.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Confirmar que "Asistencias esta semana" coincide más o menos con lo marcado en el check-in durante la semana.</li>
+      <li><input type="checkbox"> Confirmar que "Alumnos únicos" no cuenta dos veces al mismo alumno si vino varios días.</li>
+      <li><input type="checkbox"> Confirmar que "Altas nuevas" refleja los alumnos dados de alta esa semana.</li>
+      <li><input type="checkbox"> Revisar que los horarios de mayor ocupación tengan sentido con lo que se vio en el gimnasio esa semana.</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ADMIN -->
+<!-- ============================================================ -->
+<div class="role-section" id="admin">
+  <div class="role-header">
+    <span class="role-badge">Admin</span>
+    <h2>Pantallas exclusivas de administración</h2>
+  </div>
+  <p class="role-lead">Solo visibles con el usuario de administrador. Incluye configuración del sistema y las herramientas de control de pagos.</p>
+
+  <div class="screen proximamente" id="a1-inicio">
+    <div class="screen-title-row">
+      <h3>8. Inicio (panel principal) <span class="proximamente-pill">Próximamente</span></h3>
+      <span class="num-tag">ADMIN</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">
+      Hoy, al entrar como admin, esta pantalla todavía no tiene contenido armado — es un espacio reservado
+      para más adelante (un panel general con números del gimnasio).
+    </p>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Confirmar que al entrar como admin la pantalla carga sin error, aunque todavía no tenga contenido.</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="a2-historial-pagos">
+    <div class="screen-title-row">
+      <h3>9. Pagos — Historial completo de pagos</h3>
+      <span class="num-tag">ADMIN</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">La tabla con todos los pagos registrados en el gimnasio, filtrada por la sucursal que tengas elegida arriba.</p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Pestaña "Historial de pagos" dentro de Pagos.</li>
+      <li>Buscás por nombre de alumno o DNI.</li>
+      <li>Tildás uno o varios pagos con el checkbox de la izquierda — arriba se suma el total en vivo de lo tildado.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Buscar un pago puntual por el nombre del alumno.</li>
+      <li><input type="checkbox"> Tildar 3 o 4 pagos distintos y confirmar que el total de arriba suma correctamente.</li>
+      <li><input type="checkbox"> Tildar el checkbox del encabezado ("seleccionar todos") y confirmar que selecciona toda la lista visible.</li>
+      <li><input type="checkbox"> Confirmar que la columna "Profesor" muestra quién recibió el pago en persona (no necesariamente quién está logueado en ese momento).</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="a3-pendientes">
+    <div class="screen-title-row">
+      <h3>10. Pagos — Pendientes de validar</h3>
+      <span class="num-tag">ADMIN</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">Los pagos que registraron los profesores y que todavía ninguna admin confirmó.</p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Pestaña "Pendientes de validar" dentro de Pagos.</li>
+      <li>Tocás "Validar" en la fila del pago y confirmás en el cartel que aparece.</li>
+      <li>Una vez validado, ese pago ya cuenta para el estado de cuenta del alumno.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Validar un pago pendiente y confirmar que desaparece de esta lista.</li>
+      <li><input type="checkbox"> Ir al historial de ese alumno y confirmar que el pago ahora figura "Validado", con tu nombre de admin y la fecha.</li>
+      <li><input type="checkbox"> Confirmar que el estado de cuenta del alumno (Deuda/Pendiente/Al día) cambia después de validar, si corresponde.</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="a4-sin-cargo">
+    <div class="screen-title-row">
+      <h3>11. Pagos — Sin cargo generado</h3>
+      <span class="num-tag">ADMIN</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">
+      Alumnos que vinieron a entrenar este mes pero todavía no tienen cargada la cuota de ese mes
+      (el "cargo"). Desde acá se carga.
+    </p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Pestaña "Sin cargo generado" dentro de Pagos.</li>
+      <li>Opcional: "Ver asistencias" para revisar cuántas veces vino ese alumno este mes antes de decidir el monto.</li>
+      <li>"Agregar cargo": confirmás el período y escribís el monto — puede ser $0 si es una clase de prueba o una cortesía.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Cargar un cargo con un monto normal (el valor de la cuota) y confirmar que el alumno pasa a "Deuda" hasta que pague.</li>
+      <li><input type="checkbox"> Cargar un cargo de $0 (clase de prueba/cortesía) y confirmar que el alumno queda directamente "Al día", sin necesidad de ningún pago.</li>
+      <li><input type="checkbox"> Usar "Ver asistencias" antes de cargar el cargo y confirmar que muestra las veces que vino ese alumno este mes.</li>
+      <li><input type="checkbox"> Confirmar que un alumno que NO vino este mes no aparece en esta lista (solo aparecen los que sí asistieron).</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="a5-deudores">
+    <div class="screen-title-row">
+      <h3>12. Pagos — Deudores</h3>
+      <span class="num-tag">ADMIN</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">Alumnos que ya tienen la cuota del mes cargada pero todavía no están al día (ni parcial ni totalmente).</p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Pestaña "Deudores" dentro de Pagos.</li>
+      <li>Ícono de WhatsApp: abre el mensaje de deudores ya completado con el nombre del alumno y el monto que falta.</li>
+      <li>"Ver detalle": te lleva directo al historial y estado de cuenta de ese alumno.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Enviar WhatsApp a un deudor con celular cargado y confirmar que el mensaje trae el monto correcto que falta pagar.</li>
+      <li><input type="checkbox"> Confirmar que el botón de WhatsApp aparece deshabilitado en un deudor sin celular cargado.</li>
+      <li><input type="checkbox"> Tocar "Ver detalle" y confirmar que abre el historial del alumno correcto.</li>
+      <li><input type="checkbox"> Confirmar que un alumno que pagó una parte de la cuota sigue apareciendo acá como "Pendiente" (no "Deuda") hasta completar el monto.</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="a6-disciplinas">
+    <div class="screen-title-row">
+      <h3>13. Configuración — Disciplinas</h3>
+      <span class="num-tag">ADMIN</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">Las actividades del gimnasio (Funcional, Yoga, Musculación, etc.) y, si corresponde, los horarios en los que se dictan.</p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>"Nueva disciplina": nombre, sucursal, y si es de "horario libre" (sin franjas fijas, como musculación) o no.</li>
+      <li>Si NO es de horario libre, agregás una o más horas de inicio (por ejemplo, la clase de Yoga de las 18:00).</li>
+      <li>Podés marcar una disciplina como inactiva sin borrarla.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Crear una disciplina nueva de horario libre (sin franjas) y confirmar que al marcar asistencia con ella toma la hora real.</li>
+      <li><input type="checkbox"> Crear una disciplina con horarios fijos, agregando 2 o más franjas, y confirmar que aparecen todas al marcar asistencia en el kiosco.</li>
+      <li><input type="checkbox"> Sacar un horario ya cargado de una disciplina existente y guardar el cambio.</li>
+      <li><input type="checkbox"> Marcar una disciplina como inactiva y confirmar que ya no aparece como opción al marcar asistencia.</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="a7-profesores">
+    <div class="screen-title-row">
+      <h3>14. Configuración — Profesores</h3>
+      <span class="num-tag">ADMIN</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">
+      La lista de personas reales que trabajan en el gimnasio (distinto del usuario compartido con el que
+      se loguean). Sirve para saber quién recibió cada pago y quién marcó cada turno de entrada/salida.
+    </p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>"Nuevo profesor": nombre y si está activo.</li>
+      <li>Se puede editar o desactivar sin borrar el historial que ya generó esa persona.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Cargar un profesor nuevo y confirmar que aparece como opción en el formulario de Registrar pago.</li>
+      <li><input type="checkbox"> Desactivar un profesor y confirmar que ya no aparece en las tarjetas de "Mi turno", pero su historial pasado sigue intacto.</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="a8-whatsapp">
+    <div class="screen-title-row">
+      <h3>15. Configuración — WhatsApp</h3>
+      <span class="num-tag">ADMIN</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">
+      Los 2 textos que se usan al mandar WhatsApp desde el sistema. No es una pantalla para enviar
+      mensajes — solo para editar las plantillas que se usan en otras pantallas.
+    </p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>"Mensaje de bienvenida": se usa al mandar WhatsApp a un alumno nuevo desde Alumnos. Escribí <code>{nombre}</code> donde quieras que aparezca el nombre del alumno. Ahí también va el link al grupo de WhatsApp del gimnasio, escrito como texto normal.</li>
+      <li>"Mensaje de deudores": se usa desde Pagos &gt; Deudores. Usá <code>{nombre}</code> y <code>{monto}</code>.</li>
+      <li>Guardás los cambios.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Cambiar el texto del mensaje de bienvenida, guardar, y después enviar un WhatsApp de bienvenida real para confirmar que usa el texto nuevo.</li>
+      <li><input type="checkbox"> Cambiar el mensaje de deudores y confirmar que <code>{nombre}</code> y <code>{monto}</code> se reemplazan bien al enviar.</li>
+      <li><input type="checkbox"> Confirmar que el link al grupo de WhatsApp quedó bien escrito dentro del mensaje de bienvenida.</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen" id="a9-resumen-profesores">
+    <div class="screen-title-row">
+      <h3>16. Resúmenes — Profesores</h3>
+      <span class="num-tag">ADMIN</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">Cuántos días trabajó cada profesor y cuántas horas, en el período que elijas.</p>
+
+    <h4>Cómo se usa</h4>
+    <ol>
+      <li>Elegís el mes arriba.</li>
+      <li>Ves la tabla con días y horas trabajadas por cada profesor.</li>
+      <li>Tocás una fila para ver el detalle día por día de esa persona.</li>
+    </ol>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Cambiar el período (mes) y confirmar que los totales cambian según corresponda.</li>
+      <li><input type="checkbox"> Tocar un profesor y confirmar que el detalle muestra sus entradas y salidas reales de ese mes.</li>
+      <li><input type="checkbox"> Confirmar que un turno todavía abierto (sin salida registrada) se ve como "En curso" en vez de romper el cálculo de horas.</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+
+  <div class="screen proximamente" id="a10-resumen-turnos">
+    <div class="screen-title-row">
+      <h3>17. Resúmenes — Turnos <span class="proximamente-pill">Próximamente</span></h3>
+      <span class="num-tag">ADMIN</span>
+    </div>
+
+    <h4>Qué es</h4>
+    <p class="que-es">
+      Todavía no está construido — cuando esté listo va a mostrar la ocupación de horarios por disciplina.
+    </p>
+
+    <h4>Qué probar en esta entrega</h4>
+    <ul class="check-list">
+      <li><input type="checkbox"> Confirmar que la pantalla no da error al entrar, y que solo muestra el aviso "Próximamente".</li>
+    </ul>
+
+    <a class="back-to-toc" href="#indice">↑ Volver al índice</a>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- REPORTE DE BUGS -->
+<!-- ============================================================ -->
+<div class="bugs-section" id="reporte-bugs">
+  <div class="role-header">
+    <span class="role-badge">Cierre</span>
+    <h2>Reporte de bugs</h2>
+  </div>
+  <p class="role-lead">
+    Planilla para anotar cualquier cosa que no funcione como se espera durante la prueba. Se puede completar
+    a mano si imprimen el manual, o queda acá como plantilla de referencia si lo usan en pantalla.
+  </p>
+
+  <table class="bugs">
+    <colgroup>
+      <col class="col-pantalla" />
+      <col class="col-que-paso" />
+      <col class="col-repro" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Pantalla</th>
+        <th>Qué pasó</th>
+        <th>Cómo reproducirlo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<footer class="doc-footer">
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0CAYAAADL1t+KAAAAtGVYSWZJSSoACAAAAAYAEgEDAAEAAAABAAAAGgEFAAEAAABWAAAAGwEFAAEAAABeAAAAKAEDAAEAAAACAAAAEwIDAAEAAAABAAAAaYcEAAEAAABmAAAAAAAAAGAAAAABAAAAYAAAAAEAAAAGAACQBwAEAAAAMDIxMAGRBwAEAAAAAQIDAACgBwAEAAAAMDEwMAGgAwABAAAA//8AAAKgBAABAAAA9AEAAAOgBAABAAAA9AEAAAAAAAAA4cNEAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAGG2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSfvu78nIGlkPSdXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQnPz4KPHg6eG1wbWV0YSB4bWxuczp4PSdhZG9iZTpuczptZXRhLyc+CjxyZGY6UkRGIHhtbG5zOnJkZj0naHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyc+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpBdHRyaWI9J2h0dHA6Ly9ucy5hdHRyaWJ1dGlvbi5jb20vYWRzLzEuMC8nPgogIDxBdHRyaWI6QWRzPgogICA8cmRmOlNlcT4KICAgIDxyZGY6bGkgcmRmOnBhcnNlVHlwZT0nUmVzb3VyY2UnPgogICAgIDxBdHRyaWI6Q3JlYXRlZD4yMDI2LTA3LTE3PC9BdHRyaWI6Q3JlYXRlZD4KICAgICA8QXR0cmliOkRhdGE+eyZxdW90O2RvYyZxdW90OzomcXVvdDtEQUdoX19LQWNYOCZxdW90OywmcXVvdDt1c2VyJnF1b3Q7OiZxdW90O1VBRm9iS2lyTWdNJnF1b3Q7LCZxdW90O2JyYW5kJnF1b3Q7OiZxdW90O1VuaXZlcnNpZGFkIFByb3ZpbmNpYWwgZGUgQ29yZG9iYSAmcXVvdDssJnF1b3Q7dGVtcGxhdGUmcXVvdDs6JnF1b3Q7V2hpdGUgR3JlZW4gT3JhbmdlIE1vZGVybiBGaW5hbmNpYWwgRGF0YSBBdWRpdCBTdGF0aXN0aWMgTG9nbyZxdW90O308L0F0dHJpYjpEYXRhPgogICAgIDxBdHRyaWI6RXh0SWQ+MDUzZGUwY2MtYTc4MS00ODE3LTk3MzEtMDIzNGJmZGY0MTNjPC9BdHRyaWI6RXh0SWQ+CiAgICAgPEF0dHJpYjpGYklkPjUyNTI2NTkxNDE3OTU4MDwvQXR0cmliOkZiSWQ+CiAgICAgPEF0dHJpYjpUb3VjaFR5cGU+MjwvQXR0cmliOlRvdWNoVHlwZT4KICAgIDwvcmRmOmxpPgogICA8L3JkZjpTZXE+CiAgPC9BdHRyaWI6QWRzPgogPC9yZGY6RGVzY3JpcHRpb24+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpkYz0naHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8nPgogIDxkYzp0aXRsZT4KICAgPHJkZjpBbHQ+CiAgICA8cmRmOmxpIHhtbDpsYW5nPSd4LWRlZmF1bHQnPmRlY2lkYXRhIGxvZ28gLSBibGFuY288L3JkZjpsaT4KICAgPC9yZGY6QWx0PgogIDwvZGM6dGl0bGU+CiA8L3JkZjpEZXNjcmlwdGlvbj4KCiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0nJwogIHhtbG5zOnBkZj0naHR0cDovL25zLmFkb2JlLmNvbS9wZGYvMS4zLyc+CiAgPHBkZjpBdXRob3I+SmltZW5hIFRoZWF1eDwvcGRmOkF1dGhvcj4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6eG1wPSdodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvJz4KICA8eG1wOkNyZWF0b3JUb29sPkNhbnZhIGRvYz1EQUdoX19LQWNYOCB1c2VyPVVBRm9iS2lyTWdNIGJyYW5kPVVuaXZlcnNpZGFkIFByb3ZpbmNpYWwgZGUgQ29yZG9iYSAgdGVtcGxhdGU9V2hpdGUgR3JlZW4gT3JhbmdlIE1vZGVybiBGaW5hbmNpYWwgRGF0YSBBdWRpdCBTdGF0aXN0aWMgTG9nbzwveG1wOkNyZWF0b3JUb29sPgogPC9yZGY6RGVzY3JpcHRpb24+CjwvcmRmOlJERj4KPC94OnhtcG1ldGE+Cjw/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" alt="deciDATA" />
+  <span>deciDATA</span>
+  <span>© 2026 · Todos los derechos reservados</span>
+</footer>
+
+</div>
+</body>
+</html>
