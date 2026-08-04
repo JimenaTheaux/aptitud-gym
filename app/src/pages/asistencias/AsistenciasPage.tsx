@@ -1,10 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Edit2 } from 'react-feather'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Edit2, Eye } from 'react-feather'
 import { Navigate } from 'react-router-dom'
 import { AppLayout } from '../../components/layout/AppLayout'
 import { AlumnoSelect } from '../../components/ui/AlumnoSelect'
 import { AsistenciaSubnav } from './AsistenciaSubnav'
 import { DataTable } from '../../components/ui/DataTable'
+import { DateField } from '../../components/ui/DateField'
 import { Drawer } from '../../components/ui/Drawer'
 import { FormField } from '../../components/ui/FormField'
 import { PinButton } from '../../components/ui/PinButton'
@@ -14,14 +15,37 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useSucursal } from '../../contexts/SucursalContext'
 import { usePinnedRows } from '../../hooks/usePinnedRows'
 import {
-  listAsistenciasConDetalle,
+  listAsistenciasEnRango,
   updateAsistencia,
   type AsistenciaConDetalle,
 } from '../../lib/asistencias'
 import { listAlumnos } from '../../lib/alumnos'
 import { listDisciplinas } from '../../lib/disciplinas'
-import { formatearFecha, formatearHora } from '../../lib/formato'
+import { formatearFecha, formatearHora, hoyISO, periodoActual, rangoDelMes, rangoDeEstaSemana } from '../../lib/formato'
 import type { Alumno, Disciplina } from '../../types/db'
+
+type FilaAsistenciaAlumno = {
+  alumnoId: string
+  alumno: { apellido: string; nombre: string; dni: string } | null
+  cantidad: number
+}
+
+function agruparPorAlumno(asistencias: AsistenciaConDetalle[]): FilaAsistenciaAlumno[] {
+  const filas = new Map<string, FilaAsistenciaAlumno>()
+  for (const a of asistencias) {
+    const fila = filas.get(a.alumno_id)
+    if (fila) {
+      fila.cantidad += 1
+    } else {
+      filas.set(a.alumno_id, { alumnoId: a.alumno_id, alumno: a.alumno, cantidad: 1 })
+    }
+  }
+  return Array.from(filas.values()).sort((a, b) => b.cantidad - a.cantidad)
+}
+
+function nombreAlumno(alumno: FilaAsistenciaAlumno['alumno']): string {
+  return alumno ? `${alumno.apellido}, ${alumno.nombre}` : 'Alumno'
+}
 
 function EditarAsistenciaDrawer({
   asistencia,
@@ -101,7 +125,7 @@ function EditarAsistenciaDrawer({
           ))}
         </SelectField>
 
-        <FormField label="Fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
+        <DateField label="Fecha" value={fecha} onChange={setFecha} required />
         <TimeField label="Hora" value={hora} onChange={setHora} required />
 
         <SelectField label="Sucursal" value={sucursalId} onChange={(e) => setSucursalId(e.target.value)}>
@@ -126,34 +150,100 @@ function EditarAsistenciaDrawer({
   )
 }
 
+function DetalleAsistenciasAlumnoDrawer({
+  alumno,
+  asistencias,
+  onClose,
+  onEditar,
+}: {
+  alumno: { id: string; nombre: string } | null
+  asistencias: AsistenciaConDetalle[]
+  onClose: () => void
+  onEditar: (a: AsistenciaConDetalle) => void
+}) {
+  if (!alumno) return null
+
+  const registros = asistencias.filter((a) => a.alumno_id === alumno.id)
+
+  return (
+    <Drawer open onClose={onClose} title={`Asistencias de ${alumno.nombre}`}>
+      <div className="flex flex-col gap-2">
+        {registros.map((a) => (
+          <div
+            key={a.id}
+            className="flex items-center justify-between rounded-[10px] border border-border-subtle bg-bg-input px-3 py-2.5"
+          >
+            <div>
+              <p className="font-inter text-[13px] text-text-primary">
+                {formatearFecha(a.fecha)} · {formatearHora(a.hora)}
+              </p>
+              <p className="font-inter text-[11px] text-text-secondary">{a.disciplina?.nombre ?? 'Sin disciplina'}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onEditar(a)}
+              aria-label="Editar asistencia"
+              className="text-text-secondary hover:text-text-primary"
+            >
+              <Edit2 size={14} />
+            </button>
+          </div>
+        ))}
+        {registros.length === 0 && (
+          <p className="font-inter text-[13px] text-text-secondary">Sin registros en el período filtrado.</p>
+        )}
+      </div>
+    </Drawer>
+  )
+}
+
 export function AsistenciasPage() {
   const { rol } = useAuth()
-  const { habilitado: pinHabilitado, togglePin, estaFijado, limiteAlcanzado } = usePinnedRows('asistencias')
+  const { habilitado: pinHabilitado, togglePin, estaFijado, limiteAlcanzado } = usePinnedRows('asistencias_alumnos')
   const [asistencias, setAsistencias] = useState<AsistenciaConDetalle[]>([])
   const [alumnos, setAlumnos] = useState<Alumno[]>([])
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([])
   const [loading, setLoading] = useState(true)
   const [editando, setEditando] = useState<AsistenciaConDetalle | null>(null)
-  const [filtroFecha, setFiltroFecha] = useState('')
+  const [alumnoDetalle, setAlumnoDetalle] = useState<{ id: string; nombre: string } | null>(null)
+  const [filtroDesde, setFiltroDesde] = useState('')
+  const [filtroHasta, setFiltroHasta] = useState('')
   const [filtroDisciplinaId, setFiltroDisciplinaId] = useState('')
   const [filtroAlumno, setFiltroAlumno] = useState('')
 
   async function reload() {
-    const data = await listAsistenciasConDetalle()
+    const data = await listAsistenciasEnRango({
+      desde: filtroDesde || undefined,
+      hasta: filtroHasta || undefined,
+      disciplinaId: filtroDisciplinaId || undefined,
+    })
     setAsistencias(data)
   }
 
   useEffect(() => {
     let active = true
-    Promise.all([listAsistenciasConDetalle(), listAlumnos(), listDisciplinas()]).then(
-      ([asistenciasData, alumnosData, disciplinasData]) => {
-        if (!active) return
-        setAsistencias(asistenciasData)
-        setAlumnos(alumnosData)
-        setDisciplinas(disciplinasData)
-        setLoading(false)
-      },
-    )
+    setLoading(true)
+    listAsistenciasEnRango({
+      desde: filtroDesde || undefined,
+      hasta: filtroHasta || undefined,
+      disciplinaId: filtroDisciplinaId || undefined,
+    }).then((data) => {
+      if (!active) return
+      setAsistencias(data)
+      setLoading(false)
+    })
+    return () => {
+      active = false
+    }
+  }, [filtroDesde, filtroHasta, filtroDisciplinaId])
+
+  useEffect(() => {
+    let active = true
+    Promise.all([listAlumnos(), listDisciplinas()]).then(([alumnosData, disciplinasData]) => {
+      if (!active) return
+      setAlumnos(alumnosData)
+      setDisciplinas(disciplinasData)
+    })
     return () => {
       active = false
     }
@@ -161,22 +251,21 @@ export function AsistenciasPage() {
 
   if (rol === 'kiosco') return <Navigate to="/" replace />
 
-  const asistenciasFiltradas = asistencias.filter((a) => {
-    if (filtroFecha && a.fecha !== filtroFecha) return false
-    if (filtroDisciplinaId && a.disciplina_id !== filtroDisciplinaId) return false
-    if (filtroAlumno) {
-      const query = filtroAlumno.trim().toLowerCase()
-      const nombre = `${a.alumno?.apellido ?? ''} ${a.alumno?.nombre ?? ''}`.toLowerCase()
-      const dni = a.alumno?.dni ?? ''
-      if (!nombre.includes(query) && !dni.includes(query)) return false
-    }
-    return true
+  const filas = useMemo(() => agruparPorAlumno(asistencias), [asistencias])
+
+  const filasFiltradas = filas.filter((f) => {
+    if (!filtroAlumno) return true
+    const query = filtroAlumno.trim().toLowerCase()
+    const nombre = nombreAlumno(f.alumno).toLowerCase()
+    const dni = f.alumno?.dni ?? ''
+    return nombre.includes(query) || dni.includes(query)
   })
 
-  const hayFiltrosActivos = Boolean(filtroFecha || filtroDisciplinaId || filtroAlumno)
+  const hayFiltrosActivos = Boolean(filtroDesde || filtroHasta || filtroDisciplinaId || filtroAlumno)
 
   function limpiarFiltros() {
-    setFiltroFecha('')
+    setFiltroDesde('')
+    setFiltroHasta('')
     setFiltroDisciplinaId('')
     setFiltroAlumno('')
   }
@@ -185,6 +274,12 @@ export function AsistenciasPage() {
     setEditando(null)
     await reload()
   }
+
+  const atajos = [
+    { label: 'Hoy', inicio: hoyISO(), fin: hoyISO() },
+    { label: 'Esta semana', ...rangoDeEstaSemana() },
+    { label: 'Este mes', ...rangoDelMes(periodoActual()) },
+  ]
 
   return (
     <AppLayout>
@@ -200,83 +295,111 @@ export function AsistenciasPage() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-border-subtle bg-bg-card p-4 lg:flex-row lg:items-end lg:gap-3">
-          <div className="flex-1">
-            <FormField
-              label="Fecha"
-              type="date"
-              value={filtroFecha}
-              onChange={(e) => setFiltroFecha(e.target.value)}
-            />
+        <div className="flex flex-col gap-3 rounded-2xl border border-border-subtle bg-bg-card p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:gap-3">
+            <div className="flex-1">
+              <DateField
+                label="Desde"
+                value={filtroDesde}
+                onChange={setFiltroDesde}
+                max={filtroHasta || undefined}
+              />
+            </div>
+
+            <div className="flex-1">
+              <DateField
+                label="Hasta"
+                value={filtroHasta}
+                onChange={setFiltroHasta}
+                min={filtroDesde || undefined}
+              />
+            </div>
+
+            <div className="flex-1">
+              <SelectField
+                label="Disciplina"
+                value={filtroDisciplinaId}
+                onChange={(e) => setFiltroDisciplinaId(e.target.value)}
+              >
+                <option value="">Todas</option>
+                {disciplinas.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.nombre}
+                  </option>
+                ))}
+              </SelectField>
+            </div>
+
+            <div className="flex-1">
+              <FormField
+                label="Alumno"
+                placeholder="Nombre o DNI…"
+                value={filtroAlumno}
+                onChange={(e) => setFiltroAlumno(e.target.value)}
+              />
+            </div>
+
+            {hayFiltrosActivos && (
+              <button
+                type="button"
+                onClick={limpiarFiltros}
+                className="h-11 shrink-0 rounded-[10px] border border-border-subtle px-4 font-montserrat text-[13px] font-bold text-text-secondary hover:text-text-primary xl:h-10"
+              >
+                Limpiar filtros
+              </button>
+            )}
           </div>
 
-          <div className="flex-1">
-            <SelectField
-              label="Disciplina"
-              value={filtroDisciplinaId}
-              onChange={(e) => setFiltroDisciplinaId(e.target.value)}
-            >
-              <option value="">Todas</option>
-              {disciplinas.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nombre}
-                </option>
-              ))}
-            </SelectField>
+          <div className="flex flex-wrap gap-2">
+            {atajos.map((atajo) => {
+              const activo = filtroDesde === atajo.inicio && filtroHasta === atajo.fin
+              return (
+                <button
+                  key={atajo.label}
+                  type="button"
+                  onClick={() => {
+                    setFiltroDesde(atajo.inicio)
+                    setFiltroHasta(atajo.fin)
+                  }}
+                  className={`h-8 shrink-0 rounded-full border px-3 font-inter text-[12px] font-semibold transition-colors ${
+                    activo
+                      ? 'border-accent-cyan bg-[rgba(46,185,254,0.12)] text-white'
+                      : 'border-border-subtle text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  {atajo.label}
+                </button>
+              )
+            })}
           </div>
-
-          <div className="flex-1">
-            <FormField
-              label="Alumno"
-              placeholder="Nombre o DNI…"
-              value={filtroAlumno}
-              onChange={(e) => setFiltroAlumno(e.target.value)}
-            />
-          </div>
-
-          {hayFiltrosActivos && (
-            <button
-              type="button"
-              onClick={limpiarFiltros}
-              className="h-11 shrink-0 rounded-[10px] border border-border-subtle px-4 font-montserrat text-[13px] font-bold text-text-secondary hover:text-text-primary xl:h-10"
-            >
-              Limpiar filtros
-            </button>
-          )}
         </div>
 
-        <DataTable<AsistenciaConDetalle>
+        <DataTable<FilaAsistenciaAlumno>
           columns={[
-            {
-              header: 'Alumno',
-              accessor: (a) => (a.alumno ? `${a.alumno.apellido}, ${a.alumno.nombre}` : '—'),
-            },
-            { header: 'DNI', accessor: (a) => a.alumno?.dni ?? '—' },
-            { header: 'Disciplina', accessor: (a) => a.disciplina?.nombre ?? '—' },
-            { header: 'Fecha', accessor: (a) => formatearFecha(a.fecha) },
-            { header: 'Hora', accessor: (a) => formatearHora(a.hora) },
-            { header: 'Sucursal', accessor: (a) => a.sucursal?.nombre ?? '—' },
+            { header: 'Alumno', accessor: (f) => nombreAlumno(f.alumno) },
+            { header: 'DNI', accessor: (f) => f.alumno?.dni ?? '—' },
+            { header: 'Asistencias en el período', accessor: (f) => String(f.cantidad) },
             ...(rol === 'admin'
               ? [
                   {
                     header: '',
-                    accessor: (a: AsistenciaConDetalle) => (
+                    accessor: (f: FilaAsistenciaAlumno) => (
                       <div className="flex items-center justify-end gap-3">
                         {pinHabilitado && (
                           <PinButton
-                            fijado={estaFijado(a.id)}
-                            disabled={!estaFijado(a.id) && limiteAlcanzado}
-                            onClick={() => togglePin(a.id)}
-                            label={`Fijar asistencia de ${a.alumno ? `${a.alumno.apellido}, ${a.alumno.nombre}` : 'alumno'}`}
+                            fijado={estaFijado(f.alumnoId)}
+                            disabled={!estaFijado(f.alumnoId) && limiteAlcanzado}
+                            onClick={() => togglePin(f.alumnoId)}
+                            label={`Fijar asistencias de ${nombreAlumno(f.alumno)}`}
                           />
                         )}
                         <button
                           type="button"
-                          onClick={() => setEditando(a)}
-                          aria-label="Editar asistencia"
+                          onClick={() => setAlumnoDetalle({ id: f.alumnoId, nombre: nombreAlumno(f.alumno) })}
+                          aria-label="Ver detalle de asistencias"
                           className="text-text-secondary hover:text-text-primary"
                         >
-                          <Edit2 size={14} />
+                          <Eye size={14} />
                         </button>
                       </div>
                     ),
@@ -285,13 +408,13 @@ export function AsistenciasPage() {
                 ]
               : []),
           ]}
-          data={asistenciasFiltradas}
-          keyExtractor={(a) => a.id}
+          data={filasFiltradas}
+          keyExtractor={(f) => f.alumnoId}
           loading={loading}
-          tablaId="asistencias"
+          tablaId="asistencias_alumnos"
           emptyMessage={
             hayFiltrosActivos
-              ? 'Ninguna asistencia coincide con los filtros.'
+              ? 'Ningún alumno coincide con los filtros.'
               : 'Todavía no hay asistencias registradas.'
           }
         />
@@ -302,13 +425,24 @@ export function AsistenciasPage() {
       </div>
 
       {rol === 'admin' && (
-        <EditarAsistenciaDrawer
-          asistencia={editando}
-          alumnos={alumnos}
-          disciplinas={disciplinas}
-          onClose={() => setEditando(null)}
-          onSaved={handleSaved}
-        />
+        <>
+          <DetalleAsistenciasAlumnoDrawer
+            alumno={alumnoDetalle}
+            asistencias={asistencias}
+            onClose={() => setAlumnoDetalle(null)}
+            onEditar={(a) => {
+              setAlumnoDetalle(null)
+              setEditando(a)
+            }}
+          />
+          <EditarAsistenciaDrawer
+            asistencia={editando}
+            alumnos={alumnos}
+            disciplinas={disciplinas}
+            onClose={() => setEditando(null)}
+            onSaved={handleSaved}
+          />
+        </>
       )}
     </AppLayout>
   )

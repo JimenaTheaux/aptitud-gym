@@ -32,13 +32,24 @@ export type AsistenciaUpdateInput = {
   sucursal_id: string
 }
 
-export async function listAsistenciasConDetalle(): Promise<AsistenciaConDetalle[]> {
-  const { data, error } = await supabase
+// Asistencias con detalle de alumno/disciplina/sucursal, opcionalmente acotadas
+// a un rango de fechas (inclusive) y/o una disciplina — usado por el listado
+// admin de Asistencias (filtros Desde/Hasta + Disciplina). Sin filtros, trae
+// todo el historial (mismo comportamiento que antes de tener rango).
+export async function listAsistenciasEnRango(
+  filtros: { desde?: string; hasta?: string; disciplinaId?: string } = {},
+): Promise<AsistenciaConDetalle[]> {
+  let query = supabase
     .from('asistencias')
     .select('*, alumno:alumnos(apellido,nombre,dni), disciplina:disciplinas(nombre), sucursal:sucursales(nombre)')
     .order('fecha', { ascending: false })
     .order('hora', { ascending: false })
 
+  if (filtros.desde) query = query.gte('fecha', filtros.desde)
+  if (filtros.hasta) query = query.lte('fecha', filtros.hasta)
+  if (filtros.disciplinaId) query = query.eq('disciplina_id', filtros.disciplinaId)
+
+  const { data, error } = await query
   if (error) throw error
   return (data as AsistenciaConDetalle[]) ?? []
 }

@@ -84,3 +84,20 @@ export function rangoDelMes(periodo: string): { inicio: string; fin: string } {
   const fin = `${periodo}-${String(ultimoDia).padStart(2, '0')}`
   return { inicio, fin }
 }
+
+export function hoyISO(): string {
+  const hoy = new Date()
+  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
+}
+
+// Semana calendario lunes-domingo (mismo criterio que el calendario de DateField)
+// que contiene hoy — usado por el atajo "Esta semana" de los filtros de rango.
+export function rangoDeEstaSemana(): { inicio: string; fin: string } {
+  const hoy = new Date()
+  const diaSemana = (hoy.getDay() + 6) % 7 // lunes = 0
+  const lunes = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - diaSemana)
+  const domingo = new Date(lunes.getFullYear(), lunes.getMonth(), lunes.getDate() + 6)
+  const aISO = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return { inicio: aISO(lunes), fin: aISO(domingo) }
+}
