@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { HorarioProfesor } from '../types/db'
+import type { HorarioProfesor, Modulo } from '../types/db'
 
 export type HorarioProfesorConNombre = HorarioProfesor & {
   profesor: { nombre: string } | null
@@ -9,9 +9,10 @@ export type HorarioProfesorConNombre = HorarioProfesor & {
 export type ResumenProfesor = {
   profesorId: string
   profesorNombre: string
-  sucursalNombre: string
-  dias: number
   horas: number
+  modulos2hs: number
+  modulos3hs: number
+  sinModulo: number
 }
 
 export type HorarioProfesorUpdateInput = {
@@ -19,6 +20,7 @@ export type HorarioProfesorUpdateInput = {
   hora_entrada: string | null
   hora_salida: string | null
   sucursal_id: string
+  modulo: Modulo | null
 }
 
 function fechaHoy(): string {
@@ -60,6 +62,7 @@ export async function listHorariosProfesorHoy(): Promise<HorarioProfesorConNombr
 export async function registrarEntradaProfesor(
   profesorId: string,
   sucursalId: string,
+  modulo: Modulo | null = null,
 ): Promise<HorarioProfesor> {
   const { data, error } = await supabase
     .from('horarios_profesor')
@@ -69,6 +72,7 @@ export async function registrarEntradaProfesor(
       fecha: fechaHoy(),
       hora_entrada: horaAhora(),
       hora_salida: null,
+      modulo,
     })
     .select()
     .single()
@@ -126,28 +130,29 @@ export function formatearHoras(horas: number): string {
   return `${horas.toLocaleString('es-AR', { maximumFractionDigits: 1 })} hs`
 }
 
-// Resumen por profesor de un rango de horarios (doc 04, sección 6 — admin):
-// días distintos en que marcó asistencia (con o sin salida cargada), horas
-// trabajadas (solo turnos con salida — no se estima) y sucursal(es) donde
-// registró turno. Con una sola sucursal activa (fase 1) siempre da un nombre;
-// si el profesor rotó de sucursal en el período, se listan todas.
+// Resumen por profesor de un rango de horarios (doc 04, sección 3 — admin):
+// horas total trabajadas (solo turnos con salida — no se estima) y contadores
+// de turnos por tipo de módulo marcado al registrar la entrada. Los contadores
+// son cantidad de turnos, no suma de horas — no confundir con el total.
 export function resumenPorProfesor(horarios: HorarioProfesorConNombre[]): ResumenProfesor[] {
   const mapa = new Map<
     string,
-    { profesorNombre: string; fechas: Set<string>; sucursales: Set<string>; horas: number }
+    { profesorNombre: string; horas: number; modulos2hs: number; modulos3hs: number; sinModulo: number }
   >()
 
   for (const h of horarios) {
     const actual = mapa.get(h.profesor_id) ?? {
       profesorNombre: h.profesor?.nombre ?? '—',
-      fechas: new Set<string>(),
-      sucursales: new Set<string>(),
       horas: 0,
+      modulos2hs: 0,
+      modulos3hs: 0,
+      sinModulo: 0,
     }
-    actual.fechas.add(h.fecha)
-    if (h.sucursal?.nombre) actual.sucursales.add(h.sucursal.nombre)
     const horas = calcularHorasTurno(h.hora_entrada, h.hora_salida)
     if (horas !== null) actual.horas += horas
+    if (h.modulo === '2hs') actual.modulos2hs += 1
+    else if (h.modulo === '3hs') actual.modulos3hs += 1
+    else actual.sinModulo += 1
     mapa.set(h.profesor_id, actual)
   }
 
@@ -155,9 +160,10 @@ export function resumenPorProfesor(horarios: HorarioProfesorConNombre[]): Resume
     .map(([profesorId, v]) => ({
       profesorId,
       profesorNombre: v.profesorNombre,
-      sucursalNombre: v.sucursales.size > 0 ? [...v.sucursales].join(', ') : '—',
-      dias: v.fechas.size,
       horas: v.horas,
+      modulos2hs: v.modulos2hs,
+      modulos3hs: v.modulos3hs,
+      sinModulo: v.sinModulo,
     }))
     .sort((a, b) => b.horas - a.horas)
 }

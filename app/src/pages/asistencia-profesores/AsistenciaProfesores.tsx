@@ -4,9 +4,10 @@ import { Edit2, MapPin, Trash2 } from 'react-feather'
 import { AppLayout } from '../../components/layout/AppLayout'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { DataTable } from '../../components/ui/DataTable'
+import { DateField } from '../../components/ui/DateField'
 import { Drawer } from '../../components/ui/Drawer'
-import { FormField } from '../../components/ui/FormField'
 import { PeriodoField } from '../../components/ui/PeriodoField'
+import { SelectField } from '../../components/ui/SelectField'
 import { TimeField } from '../../components/ui/TimeField'
 import { SucursalFilter } from '../../components/ui/SucursalFilter'
 import { useAuth } from '../../contexts/AuthContext'
@@ -26,7 +27,7 @@ import {
 import { listProfesores } from '../../lib/profesores'
 import { ProfesorTurnoCard } from './ProfesorTurnoCard'
 import { AsistenciaSubnav } from '../asistencias/AsistenciaSubnav'
-import type { Profesor } from '../../types/db'
+import type { Modulo, Profesor } from '../../types/db'
 
 const FORM_ID = 'horario-profesor-form'
 
@@ -42,6 +43,7 @@ function EditarHorarioDrawer({
   const [fecha, setFecha] = useState('')
   const [horaEntrada, setHoraEntrada] = useState('')
   const [horaSalida, setHoraSalida] = useState('')
+  const [modulo, setModulo] = useState<Modulo | ''>('')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -50,6 +52,7 @@ function EditarHorarioDrawer({
     setFecha(horario.fecha)
     setHoraEntrada(horario.hora_entrada ? formatearHora(horario.hora_entrada) : '')
     setHoraSalida(horario.hora_salida ? formatearHora(horario.hora_salida) : '')
+    setModulo(horario.modulo ?? '')
     setError(null)
   }, [horario])
 
@@ -69,6 +72,7 @@ function EditarHorarioDrawer({
         hora_entrada: horaEntrada || null,
         hora_salida: horaSalida || null,
         sucursal_id: horario!.sucursal_id,
+        modulo: modulo || null,
       })
       onSaved()
     } catch {
@@ -95,12 +99,22 @@ function EditarHorarioDrawer({
       }
     >
       <form id={FORM_ID} onSubmit={handleSubmit} className="flex flex-col gap-4 xl:gap-3">
-        <FormField label="Fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
+        <DateField label="Fecha" value={fecha} onChange={setFecha} required />
 
         <div className="grid grid-cols-2 gap-3">
           <TimeField label="Hora entrada" value={horaEntrada} onChange={setHoraEntrada} />
           <TimeField label="Hora salida" value={horaSalida} onChange={setHoraSalida} />
         </div>
+
+        <SelectField
+          label="Módulo"
+          value={modulo}
+          onChange={(e) => setModulo(e.target.value as Modulo | '')}
+        >
+          <option value="">Sin módulo</option>
+          <option value="2hs">2hs</option>
+          <option value="3hs">3hs</option>
+        </SelectField>
 
         {error && <p className="font-inter text-[11px] text-estado-error-text">{error}</p>}
       </form>
@@ -170,12 +184,12 @@ export function AsistenciaProfesores() {
     setHorarios([...data].sort((a, b) => (a.fecha < b.fecha ? 1 : -1)))
   }
 
-  async function handleRegistrarEntrada(profesorId: string) {
+  async function handleRegistrarEntrada(profesorId: string, modulo: Modulo | null) {
     if (!sucursalId) return
     setSavingProfesorId(profesorId)
     setErrorAccion(null)
     try {
-      await registrarEntradaProfesor(profesorId, sucursalId)
+      await registrarEntradaProfesor(profesorId, sucursalId, modulo)
       await Promise.all([cargarRoster(), recargarTabla()])
     } catch (err) {
       console.error(err)
@@ -254,7 +268,7 @@ export function AsistenciaProfesores() {
               turnoAbierto={turnoAbiertoDe(p.id)}
               saving={savingProfesorId === p.id}
               sucursalDisponible={Boolean(sucursalId)}
-              onRegistrarEntrada={() => handleRegistrarEntrada(p.id)}
+              onRegistrarEntrada={(modulo) => handleRegistrarEntrada(p.id, modulo)}
               onRegistrarSalida={() => handleRegistrarSalida(p.id)}
             />
           ))}
@@ -283,6 +297,7 @@ export function AsistenciaProfesores() {
                   return horas === null ? '—' : formatearHoras(horas)
                 },
               },
+              { header: 'Módulo', accessor: (h) => h.modulo ?? '—' },
               ...(rol === 'admin'
                 ? [
                     {

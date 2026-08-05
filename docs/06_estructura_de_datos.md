@@ -72,7 +72,9 @@ pagos  -- rediseñado en migración 06
 horarios_profesor
   id, profesor_id (references profesores, no perfiles — migración 06),
   sucursal_id (obligatorio, elegido en pantalla — migración 07),
-  fecha, hora_entrada, hora_salida
+  fecha, hora_entrada, hora_salida,
+  modulo (text, nullable — '2hs' | '3hs', migración 12 — opcional,
+    se elige de nuevo en cada turno antes de registrar la entrada)
 
 notas_internas
   id, admin_id, texto, created_at

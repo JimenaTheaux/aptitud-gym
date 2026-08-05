@@ -6,6 +6,7 @@
 // + migracion_10_alumnos_delete_y_configuracion_whatsapp.sql
 // + migracion_09_filas_fijadas.sql
 // + migracion_11_cantidad_dias_alumno.sql
+// + migracion_12_modulo_horarios_profesor.sql
 // Reglas: UUID -> string, NUMERIC/INTEGER -> number, DATE/TIME/TIMESTAMPTZ -> string, enums -> union types
 // No usar `supabase gen types` (ver skills/database-first/SKILL.md)
 
@@ -115,6 +116,8 @@ export type Profesor = {
   created_at: string
 }
 
+export type Modulo = '2hs' | '3hs'
+
 export type HorarioProfesor = {
   id: string
   // references `profesores`, no `perfiles` (migración 06 reset + pagos v2)
@@ -125,6 +128,9 @@ export type HorarioProfesor = {
   fecha: string
   hora_entrada: string | null
   hora_salida: string | null
+  // Opcional, se elige de nuevo en cada turno antes de registrar la entrada
+  // — no es una propiedad fija del profesor (migración 12).
+  modulo: Modulo | null
 }
 
 export type NotaInterna = {

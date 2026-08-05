@@ -53,7 +53,7 @@ export function ResumenProfesores() {
         <div>
           <h1 className="font-montserrat text-xl font-extrabold text-text-primary">Profesores</h1>
           <p className="mt-1 font-inter text-[13px] text-text-secondary">
-            Días de asistencia marcados y horas trabajadas por profesor.
+            Horas trabajadas y módulos marcados por profesor.
           </p>
         </div>
 
@@ -64,9 +64,10 @@ export function ResumenProfesores() {
         <DataTable<ResumenProfesor>
           columns={[
             { header: 'Nombre y apellido', accessor: (r) => r.profesorNombre },
-            { header: 'Sucursal', accessor: (r) => r.sucursalNombre },
-            { header: 'Días', accessor: (r) => r.dias },
-            { header: 'Horas', accessor: (r) => formatearHoras(r.horas) },
+            { header: 'Horas total', accessor: (r) => formatearHoras(r.horas) },
+            { header: 'Módulos 2hs', accessor: (r) => r.modulos2hs },
+            { header: 'Módulos 3hs', accessor: (r) => r.modulos3hs },
+            { header: 'Sin módulo', accessor: (r) => r.sinModulo },
           ]}
           data={resumen}
           keyExtractor={(r) => r.profesorId}

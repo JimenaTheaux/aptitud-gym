@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { LogIn, LogOut } from 'react-feather'
 import { formatearFecha, formatearHora } from '../../lib/formato'
 import type { HorarioProfesorConNombre } from '../../lib/horariosProfesor'
-import type { Profesor } from '../../types/db'
+import type { Modulo, Profesor } from '../../types/db'
 
 export function ProfesorTurnoCard({
   profesor,
@@ -18,11 +19,21 @@ export function ProfesorTurnoCard({
   // auto-selecciona sola); registrar salida no la necesita, solo actualiza
   // la fila ya abierta.
   sucursalDisponible: boolean
-  onRegistrarEntrada: () => void
+  onRegistrarEntrada: (modulo: Modulo | null) => void
   onRegistrarSalida: () => void
 }) {
+  const [modulo, setModulo] = useState<Modulo | null>(null)
   const enTurno = Boolean(turnoAbierto)
   const disabled = saving || (!enTurno && !sucursalDisponible)
+
+  function toggleModulo(valor: Modulo) {
+    setModulo((actual) => (actual === valor ? null : valor))
+  }
+
+  function handleRegistrarEntrada() {
+    onRegistrarEntrada(modulo)
+    setModulo(null)
+  }
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border-subtle bg-bg-card p-3">
@@ -46,10 +57,41 @@ export function ProfesorTurnoCard({
         </p>
       )}
 
+      {!enTurno && (
+        <div className="flex gap-1.5">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => toggleModulo('2hs')}
+            aria-pressed={modulo === '2hs'}
+            className={`h-6 flex-1 rounded-md border font-inter text-[10px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent-cyan disabled:opacity-60 ${
+              modulo === '2hs'
+                ? 'border-accent-cyan bg-accent-cyan/10 text-[#8FDBFF]'
+                : 'border-border-subtle text-text-secondary'
+            }`}
+          >
+            Mod 2hs
+          </button>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => toggleModulo('3hs')}
+            aria-pressed={modulo === '3hs'}
+            className={`h-6 flex-1 rounded-md border font-inter text-[10px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent-cyan disabled:opacity-60 ${
+              modulo === '3hs'
+                ? 'border-accent-cyan bg-accent-cyan/10 text-[#8FDBFF]'
+                : 'border-border-subtle text-text-secondary'
+            }`}
+          >
+            Mod 3hs
+          </button>
+        </div>
+      )}
+
       <button
         type="button"
         disabled={disabled}
-        onClick={enTurno ? onRegistrarSalida : onRegistrarEntrada}
+        onClick={enTurno ? onRegistrarSalida : handleRegistrarEntrada}
         className="flex h-7 items-center justify-center gap-1 rounded-lg border border-accent-cyan font-montserrat text-[11px] font-bold text-accent-cyan outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-accent-cyan disabled:opacity-60"
       >
         {enTurno ? <LogOut size={12} /> : <LogIn size={12} />}

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { AlumnoSelect } from '../../components/ui/AlumnoSelect'
 import { ESTADO_BAR_CLASS } from '../../components/ui/BadgeEstado'
+import { DateField } from '../../components/ui/DateField'
 import { Drawer } from '../../components/ui/Drawer'
 import { FormField } from '../../components/ui/FormField'
 import { PeriodoField } from '../../components/ui/PeriodoField'
@@ -263,13 +264,7 @@ export function PagoFormDrawer({
 
         {/* 2. Fecha del pago · 3. Profe */}
         <div className="grid grid-cols-2 gap-3">
-          <FormField
-            label="Fecha del pago"
-            type="date"
-            value={fechaPago}
-            onChange={(e) => setFechaPago(e.target.value)}
-            required
-          />
+          <DateField label="Fecha del pago" value={fechaPago} onChange={setFechaPago} required />
           <SelectField
             label="Profe"
             value={profesorId}
