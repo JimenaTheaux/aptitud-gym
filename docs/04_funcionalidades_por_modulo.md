@@ -18,7 +18,7 @@
 - **"Asistencia Profesores" es la pantalla de Inicio del login `profesor`** (migración 07):
   - Selector de sucursal arriba de todo (mismo patrón que el resto de las pantallas).
   - Mini cards, una por profesor del roster (`profesores`, doc 06) — más chicas que una card individual, porque conviven varias a la vez.
-  - **Módulo opcional (migración 12)**: arriba del botón "Registrar entrada", 2 botones — "Mod 2hs" / "Mod 3hs" — mismo ancho combinado que ocupa el botón de entrada. Selección opcional, uno de los dos o ninguno. Se elige de nuevo en cada turno (no queda fijo por profesor). Si se selecciona, queda guardado en ese registro de `horarios_profesor` junto con la entrada.
+  - **Módulo opcional (migración 11)**: arriba del botón "Registrar entrada", 2 botones — "Mod 2hs" / "Mod 3hs" — mismo ancho combinado que ocupa el botón de entrada. Selección opcional, uno de los dos o ninguno. Se elige de nuevo en cada turno (no queda fijo por profesor). Si se selecciona, queda guardado en ese registro de `horarios_profesor` junto con la entrada.
   - Cada card: nombre, badge de estado ("En turno" / "Sin turno abierto"), los 2 botones de módulo (opcionales, solo visibles/activos antes de registrar entrada), botón "Registrar entrada" o "Registrar salida" según corresponda.
   - Debajo, tabla resumen con filtro de período (mes-año): columnas Profesor, Fecha, Entrada, Salida, Horas (calculadas), Módulo (si se marcó), Acciones.
   - **Rol profesor**: solo puede registrar entradas/salidas (con o sin módulo) desde las cards y ver la tabla (sin editar ni borrar filas).
@@ -26,6 +26,12 @@
 - Ver listado de asistencias y listado de alumnos.
 - Registrar pagos (quedan pendientes de validación por admin — ver más abajo).
 - Resúmenes de turno: horarios de mayor ocupación por semana, movimiento de alumnos + resumen mensual.
+
+### Resúmenes → Turnos (admin) — mapa de calor de ocupación
+- Selector de rango de fechas: 3 días, una semana, un mes, una quincena, o rango manual (fecha desde / fecha hasta).
+- Grilla tipo mapa de calor: filas = franjas horarias del gimnasio, columnas = días del rango. Cada celda muestra el color de ocupación + el contador de alumnos que asistieron en esa franja (según asistencias reales registradas, disciplina Musculación — horario libre).
+- Leyenda fija arriba: Libre (0-3 alumnos, cyan) / Quedan cupos (4-6 alumnos, naranja) / Capacidad llena (7+ alumnos, rojo).
+- Reemplaza la planilla manual que se usaba antes para lo mismo — misma función, sistema propio.
 
 ### Resúmenes → Profesores (admin) — columnas de la tabla, en este orden
 El selector de período se mantiene igual. Por cada profesor, en este orden exacto:

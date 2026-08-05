@@ -126,6 +126,19 @@ Función tipo "fijar" de WhatsApp, disponible en **todas** las tablas del sistem
 
 ---
 
+## Mapa de calor de ocupación (Resúmenes → Turnos)
+
+Reusa la misma paleta de estados (cyan/naranja/rojo) pero para un significado distinto: ocupación de la sala, no estado de cuenta de un alumno.
+
+- Grilla: filas = franjas horarias, columnas = días. Celda = color de ocupación + contador de alumnos en el centro, número en negrita.
+- **Libre** (0-3 alumnos): `#2EB9FE`, texto `#0B2240`.
+- **Quedan cupos** (4-6 alumnos): `#FFA23D`, texto `#0B2240`.
+- **Capacidad llena** (7+ alumnos): `#FF5C5C`, texto oscuro `#4A1010` (no `#0B2240` — mejor contraste sobre rojo).
+- Celdas `border-radius: 8px`, sin bordes extra — el color de fondo ya comunica el estado.
+- Leyenda fija arriba de la grilla: 3 puntos de color + label, mismo criterio que cualquier leyenda de estado del sistema.
+
+---
+
 ## Branding / footer deciDATA
 
 ### Archivo del logo

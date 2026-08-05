@@ -101,3 +101,19 @@ export function rangoDeEstaSemana(): { inicio: string; fin: string } {
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   return { inicio: aISO(lunes), fin: aISO(domingo) }
 }
+
+// Ventana móvil de `dias` días terminando hoy (inclusive) — a diferencia de
+// "Esta semana"/"Este mes" (calendario), estos atajos ("3 días", "Quincena")
+// son relativos a hoy, no a un corte de calendario fijo.
+export function rangoUltimosDias(dias: number): { inicio: string; fin: string } {
+  const hoy = new Date()
+  const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - (dias - 1))
+  const aISO = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return { inicio: aISO(inicio), fin: aISO(hoy) }
+}
+
+// Abreviaturas de día de la semana, lunes-domingo (mismo orden que
+// rangoDeEstaSemana/DateField) — usadas como columnas del mapa de calor de
+// ocupación cuando el rango se agrupa por día de la semana en vez de fecha.
+export const DIAS_SEMANA_ABREV = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
