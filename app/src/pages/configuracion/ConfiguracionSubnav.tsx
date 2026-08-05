@@ -4,6 +4,7 @@ const TABS = [
   { path: '/configuracion/disciplinas', label: 'Disciplinas' },
   { path: '/configuracion/profesores', label: 'Profesores' },
   { path: '/configuracion/whatsapp', label: 'WhatsApp' },
+  { path: '/configuracion/registros-eliminados', label: 'Registros eliminados' },
 ]
 
 export function ConfiguracionSubnav() {

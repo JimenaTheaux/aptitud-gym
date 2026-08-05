@@ -36,6 +36,14 @@ asistencias
   id, alumno_id, disciplina_id, fecha, hora, sucursal_id,
   profesor_id (quién marcó)
 
+registros_eliminados  -- log genérico de auditoría (migración 13)
+  id, tabla (text, ej. 'alumnos'), registro_id, datos (jsonb, snapshot completo
+  de la fila al momento de borrarse), eliminado_por, eliminado_at
+  -- Se llena solo, vía trigger genérico (fn_log_eliminacion) en cada
+  -- tabla operativa con delete habilitado para admin. Solo admin lee.
+  -- No hay restauración automática en Fase 1 — es un log de auditoría/
+  -- recuperación de referencia, no un "deshacer" con un click.
+
 filas_fijadas  -- genérica, para la función "fijar fila" (migración 09)
   id, admin_id, tabla (text, identifica el listado: 'alumnos', 'deudores', etc.),
   registro_id (uuid de la fila fijada), created_at

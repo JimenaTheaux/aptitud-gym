@@ -7,6 +7,7 @@
 // + migracion_09_filas_fijadas.sql
 // + migracion_11_cantidad_dias_alumno.sql
 // + migracion_12_modulo_horarios_profesor.sql
+// + migracion_13_log_eliminados.sql
 // Reglas: UUID -> string, NUMERIC/INTEGER -> number, DATE/TIME/TIMESTAMPTZ -> string, enums -> union types
 // No usar `supabase gen types` (ver skills/database-first/SKILL.md)
 
@@ -156,6 +157,19 @@ export type ConfiguracionWhatsapp = {
   mensaje_bienvenida: string
   updated_by: string | null
   updated_at: string
+}
+
+// Log genérico de auditoría — snapshot de cualquier fila borrada en las
+// tablas operativas (alumnos, asistencias, cargos, pagos, disciplinas,
+// horarios_disciplina, horarios_profesor, profesores), vía trigger de DB
+// (migración 13). Solo consulta — sin restauración automática en Fase 1.
+export type RegistroEliminado = {
+  id: string
+  tabla: string
+  registro_id: string
+  datos: Record<string, unknown>
+  eliminado_por: string | null
+  eliminado_at: string
 }
 
 // Genérica, para "fijar fila" en cualquier listado (migración 09). `tabla`

@@ -79,6 +79,7 @@ Las columnas 2, 3 y 4 son **contadores de turnos**, no sumas de horas.
 - Panel de deudores / pagos pendientes de validar.
 - Validación de pagos (queda registrado qué admin validó).
 - Notas internas visibles para el equipo admin.
+- **Registros eliminados** (migración 13): pantalla donde el admin puede ver el detalle completo de cualquier fila borrada en el sistema (alumnos, asistencias, cargos, pagos, disciplinas, horarios, profesores) — qué era, quién lo borró y cuándo. Es un log de auditoría/consulta, no un botón de "deshacer": no restaura la fila automáticamente en Fase 1.
 
 ---
 

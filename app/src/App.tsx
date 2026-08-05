@@ -12,6 +12,7 @@ import { PagosPage } from './pages/pagos/PagosPage'
 import { DisciplinasPage } from './pages/configuracion/Disciplinas'
 import { ProfesoresPage } from './pages/configuracion/Profesores'
 import { WhatsappConfigPage } from './pages/configuracion/WhatsappConfig'
+import { RegistrosEliminadosPage } from './pages/configuracion/RegistrosEliminados'
 import { ResumenProfesor } from './pages/resumenes/ResumenProfesor'
 import { ResumenProfesores } from './pages/resumenes/ResumenProfesores'
 import { ResumenTurnos } from './pages/resumenes/ResumenTurnos'
@@ -66,6 +67,7 @@ function App() {
                 <Route path="/configuracion/disciplinas" element={<DisciplinasPage />} />
                 <Route path="/configuracion/profesores" element={<ProfesoresPage />} />
                 <Route path="/configuracion/whatsapp" element={<WhatsappConfigPage />} />
+                <Route path="/configuracion/registros-eliminados" element={<RegistrosEliminadosPage />} />
               </Route>
               <Route path="/style-guide" element={<StyleGuidePage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
