@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Edit2, Eye } from 'react-feather'
+import { Edit2, Eye, Trash2 } from 'react-feather'
 import { Navigate } from 'react-router-dom'
 import { AppLayout } from '../../components/layout/AppLayout'
 import { AlumnoSelect } from '../../components/ui/AlumnoSelect'
 import { AsistenciaSubnav } from './AsistenciaSubnav'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { DataTable } from '../../components/ui/DataTable'
 import { DateField } from '../../components/ui/DateField'
 import { Drawer } from '../../components/ui/Drawer'
@@ -15,6 +16,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useSucursal } from '../../contexts/SucursalContext'
 import { usePinnedRows } from '../../hooks/usePinnedRows'
 import {
+  deleteAsistencia,
   listAsistenciasEnRango,
   updateAsistencia,
   type AsistenciaConDetalle,
@@ -155,11 +157,13 @@ function DetalleAsistenciasAlumnoDrawer({
   asistencias,
   onClose,
   onEditar,
+  onEliminar,
 }: {
   alumno: { id: string; nombre: string } | null
   asistencias: AsistenciaConDetalle[]
   onClose: () => void
   onEditar: (a: AsistenciaConDetalle) => void
+  onEliminar: (a: AsistenciaConDetalle) => void
 }) {
   if (!alumno) return null
 
@@ -179,14 +183,24 @@ function DetalleAsistenciasAlumnoDrawer({
               </p>
               <p className="font-inter text-[11px] text-text-secondary">{a.disciplina?.nombre ?? 'Sin disciplina'}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => onEditar(a)}
-              aria-label="Editar asistencia"
-              className="text-text-secondary hover:text-text-primary"
-            >
-              <Edit2 size={14} />
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => onEditar(a)}
+                aria-label="Editar asistencia"
+                className="text-text-secondary hover:text-text-primary"
+              >
+                <Edit2 size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => onEliminar(a)}
+                aria-label="Eliminar asistencia"
+                className="text-estado-error-text hover:opacity-80"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           </div>
         ))}
         {registros.length === 0 && (
@@ -205,6 +219,9 @@ export function AsistenciasPage() {
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([])
   const [loading, setLoading] = useState(true)
   const [editando, setEditando] = useState<AsistenciaConDetalle | null>(null)
+  const [borrando, setBorrando] = useState<AsistenciaConDetalle | null>(null)
+  const [eliminando, setEliminando] = useState(false)
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null)
   const [alumnoDetalle, setAlumnoDetalle] = useState<{ id: string; nombre: string } | null>(null)
   const [filtroDesde, setFiltroDesde] = useState('')
   const [filtroHasta, setFiltroHasta] = useState('')
@@ -273,6 +290,21 @@ export function AsistenciasPage() {
   async function handleSaved() {
     setEditando(null)
     await reload()
+  }
+
+  async function handleConfirmarBorrado() {
+    if (!borrando) return
+    setEliminando(true)
+    setErrorEliminar(null)
+    try {
+      await deleteAsistencia(borrando.id)
+      setBorrando(null)
+      await reload()
+    } catch {
+      setErrorEliminar('No se pudo eliminar la asistencia. Probá de nuevo.')
+    } finally {
+      setEliminando(false)
+    }
   }
 
   const atajos = [
@@ -434,6 +466,10 @@ export function AsistenciasPage() {
               setAlumnoDetalle(null)
               setEditando(a)
             }}
+            onEliminar={(a) => {
+              setErrorEliminar(null)
+              setBorrando(a)
+            }}
           />
           <EditarAsistenciaDrawer
             asistencia={editando}
@@ -442,7 +478,23 @@ export function AsistenciasPage() {
             onClose={() => setEditando(null)}
             onSaved={handleSaved}
           />
+          <ConfirmDialog
+            open={Boolean(borrando)}
+            title="Eliminar asistencia"
+            message={
+              borrando
+                ? `¿Eliminar la asistencia del ${formatearFecha(borrando.fecha)} · ${formatearHora(borrando.hora)}? Esta acción no se puede deshacer.`
+                : ''
+            }
+            confirmLabel={eliminando ? 'Eliminando…' : 'Eliminar'}
+            danger
+            onConfirm={handleConfirmarBorrado}
+            onCancel={() => setBorrando(null)}
+          />
         </>
+      )}
+      {errorEliminar && (
+        <p className="mx-auto mt-3 max-w-4xl font-inter text-[11px] text-estado-error-text">{errorEliminar}</p>
       )}
     </AppLayout>
   )

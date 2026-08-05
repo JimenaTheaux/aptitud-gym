@@ -97,6 +97,11 @@ export async function updateAsistencia(id: string, input: AsistenciaUpdateInput)
   return data as Asistencia
 }
 
+export async function deleteAsistencia(id: string): Promise<void> {
+  const { error } = await supabase.from('asistencias').delete().eq('id', id)
+  if (error) throw error
+}
+
 export function horaActual() {
   return new Date().toTimeString().slice(0, 5)
 }
