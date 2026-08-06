@@ -87,7 +87,7 @@ export function PagosPendientesSection({
           {
             header: '',
             accessor: (p) => (
-              <div className="flex items-center justify-end gap-3">
+              <div className="flex items-center justify-end gap-2">
                 {pinHabilitado && (
                   <PinButton
                     fijado={estaFijado(p.id)}
@@ -100,14 +100,14 @@ export function PagosPendientesSection({
                   type="button"
                   onClick={() => setAEditar(p)}
                   aria-label={`Editar pago de ${p.alumno ? `${p.alumno.apellido}, ${p.alumno.nombre}` : 'alumno'}`}
-                  className="text-text-secondary hover:text-text-primary"
+                  className="shrink-0 text-text-secondary hover:text-text-primary"
                 >
                   <Edit2 size={14} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setAValidar(p)}
-                  className="flex items-center gap-1.5 rounded-[10px] border border-accent-cyan px-3 py-1.5 font-montserrat text-[12px] font-bold text-accent-cyan outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan"
+                  className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-[10px] border border-accent-cyan px-2.5 py-1.5 font-montserrat text-[12px] font-bold text-accent-cyan outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan"
                 >
                   <Check size={13} />
                   Validar
