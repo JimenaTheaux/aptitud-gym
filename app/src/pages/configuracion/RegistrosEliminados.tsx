@@ -9,9 +9,11 @@ import { SelectField } from '../../components/ui/SelectField'
 import { useAuth } from '../../contexts/AuthContext'
 import {
   TABLAS_CON_LOG,
+  detalleLegible,
   listRegistrosEliminados,
   resumenRegistroEliminado,
   tablaLabel,
+  type CampoDetalle,
   type RegistroEliminadoConDetalle,
 } from '../../lib/registrosEliminados'
 import { formatearFecha } from '../../lib/formato'
@@ -28,6 +30,23 @@ function DetalleRegistroDrawer({
   registro: RegistroEliminadoConDetalle | null
   onClose: () => void
 }) {
+  const [campos, setCampos] = useState<CampoDetalle[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!registro) return
+    let active = true
+    setLoading(true)
+    detalleLegible(registro).then((data) => {
+      if (!active) return
+      setCampos(data)
+      setLoading(false)
+    })
+    return () => {
+      active = false
+    }
+  }, [registro])
+
   if (!registro) return null
 
   return (
@@ -40,9 +59,23 @@ function DetalleRegistroDrawer({
           </p>
         </div>
 
-        <pre className="overflow-x-auto rounded-[10px] border border-border-subtle bg-bg-input p-3 font-inter text-[12px] leading-relaxed text-text-primary">
-          {JSON.stringify(registro.datos, null, 2)}
-        </pre>
+        {loading ? (
+          <p className="font-inter text-[12px] text-text-secondary">Cargando detalle…</p>
+        ) : (
+          <dl className="flex flex-col rounded-[10px] border border-border-subtle bg-bg-input">
+            {campos.map((campo, i) => (
+              <div
+                key={campo.label}
+                className={`flex items-start justify-between gap-4 px-3 py-2 ${
+                  i > 0 ? 'border-t border-border-subtle' : ''
+                }`}
+              >
+                <dt className="font-inter text-[12px] text-text-secondary">{campo.label}</dt>
+                <dd className="font-inter text-[13px] text-text-primary text-right">{campo.valor}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </div>
     </Drawer>
   )
