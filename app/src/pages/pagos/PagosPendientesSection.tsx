@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Check } from 'react-feather'
+import { Check, Edit2 } from 'react-feather'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { DataTable } from '../../components/ui/DataTable'
 import { PinButton } from '../../components/ui/PinButton'
 import { usePinnedRows } from '../../hooks/usePinnedRows'
 import { listPagosPendientes, validarPago, type PagoPendienteConDetalle } from '../../lib/pagos'
 import { formatearFecha, formatearMonto, formatearPeriodo } from '../../lib/formato'
+import { PagoFormDrawer } from './PagoFormDrawer'
+import type { Alumno, Disciplina, Profesor } from '../../types/db'
 
 const FORMA_PAGO_LABEL: Record<string, string> = {
   efectivo: 'Efectivo',
@@ -15,9 +17,15 @@ const FORMA_PAGO_LABEL: Record<string, string> = {
 
 export function PagosPendientesSection({
   reloadToken,
+  alumnos,
+  disciplinas,
+  profesores,
   onValidated,
 }: {
   reloadToken: number
+  alumnos: Alumno[]
+  disciplinas: Disciplina[]
+  profesores: Profesor[]
   onValidated: () => void
 }) {
   const { habilitado: pinHabilitado, togglePin, estaFijado, limiteAlcanzado } = usePinnedRows('pagos_pendientes')
@@ -25,6 +33,7 @@ export function PagosPendientesSection({
   const [loading, setLoading] = useState(true)
   const [aValidar, setAValidar] = useState<PagoPendienteConDetalle | null>(null)
   const [validando, setValidando] = useState(false)
+  const [aEditar, setAEditar] = useState<PagoPendienteConDetalle | null>(null)
 
   async function reload() {
     setLoading(true)
@@ -89,6 +98,14 @@ export function PagosPendientesSection({
                 )}
                 <button
                   type="button"
+                  onClick={() => setAEditar(p)}
+                  aria-label={`Editar pago de ${p.alumno ? `${p.alumno.apellido}, ${p.alumno.nombre}` : 'alumno'}`}
+                  className="text-text-secondary hover:text-text-primary"
+                >
+                  <Edit2 size={14} />
+                </button>
+                <button
+                  type="button"
                   onClick={() => setAValidar(p)}
                   className="flex items-center gap-1.5 rounded-[10px] border border-accent-cyan px-3 py-1.5 font-montserrat text-[12px] font-bold text-accent-cyan outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan"
                 >
@@ -122,6 +139,19 @@ export function PagosPendientesSection({
         confirmLabel={validando ? 'Validando…' : 'Validar'}
         onConfirm={handleValidar}
         onCancel={() => setAValidar(null)}
+      />
+
+      <PagoFormDrawer
+        open={Boolean(aEditar)}
+        alumnos={alumnos}
+        disciplinas={disciplinas}
+        profesores={profesores}
+        pago={aEditar}
+        onClose={() => setAEditar(null)}
+        onUpdated={() => {
+          setAEditar(null)
+          reload()
+        }}
       />
     </div>
   )

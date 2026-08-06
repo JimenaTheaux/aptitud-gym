@@ -45,6 +45,23 @@ export type NuevoPagoInput = {
   directo: boolean
 }
 
+export type EditarPagoInput = {
+  alumno_id: string
+  cargo_id: string | null
+  periodo: string
+  sucursal_id: string
+  fecha_pago: string
+  profesor_id: string | null
+  disciplina_id: string | null
+  tipo_pago: TipoPago
+  detalle: string | null
+  monto: number
+  forma_pago: FormaPago
+  monto_efectivo: number | null
+  monto_transferencia: number | null
+  parcial: boolean
+}
+
 export type Deudor = {
   alumno: Alumno
   cargo: Cargo
@@ -100,6 +117,15 @@ export async function createPago(input: NuevoPagoInput): Promise<Pago> {
     : rest
 
   const { data, error } = await supabase.from('pagos').insert(payload).select().single()
+  if (error) throw error
+  return data as Pago
+}
+
+// Edición de datos de un pago ya cargado (migración 14 — policy de UPDATE
+// admin). Nunca toca validado_por/validado_at: eso sigue siendo exclusivo de
+// fn_validar_pago, la validación sigue siendo una acción aparte.
+export async function updatePago(pagoId: string, input: EditarPagoInput): Promise<Pago> {
+  const { data, error } = await supabase.from('pagos').update(input).eq('id', pagoId).select().single()
   if (error) throw error
   return data as Pago
 }

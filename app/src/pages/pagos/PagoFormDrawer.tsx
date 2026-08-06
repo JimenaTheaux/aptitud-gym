@@ -10,7 +10,7 @@ import { EstadoCuentaCard } from '../Checkin/EstadoCuentaCard'
 import { useAuth } from '../../contexts/AuthContext'
 import { useSucursal } from '../../contexts/SucursalContext'
 import { listCargosByAlumno } from '../../lib/cargos'
-import { createPago } from '../../lib/pagos'
+import { createPago, updatePago } from '../../lib/pagos'
 import type { EstadoCuenta } from '../../lib/estadoCuenta'
 import type { Alumno, Cargo, Disciplina, FormaPago, Pago, Profesor, TipoPago } from '../../types/db'
 
@@ -47,19 +47,26 @@ export function PagoFormDrawer({
   disciplinas,
   profesores,
   alumnoPreseleccionado,
+  pago,
   onClose,
   onCreated,
+  onUpdated,
 }: {
   open: boolean
   alumnos: Alumno[]
   disciplinas: Disciplina[]
   profesores: Profesor[]
   alumnoPreseleccionado?: string | null
+  // Pago a editar — si viene seteado, el drawer abre en modo edición
+  // precargado con sus datos en vez de armar un pago nuevo.
+  pago?: Pago | null
   onClose: () => void
-  onCreated: (pago: Pago) => void
+  onCreated?: (pago: Pago) => void
+  onUpdated?: (pago: Pago) => void
 }) {
   const { perfil, rol } = useAuth()
   const { sucursales, sucursalId: sucursalContexto } = useSucursal()
+  const editando = Boolean(pago)
 
   // 1. Sucursal
   const [sucursalId, setSucursalId] = useState('')
@@ -94,6 +101,25 @@ export function PagoFormDrawer({
 
   useEffect(() => {
     if (!open) return
+    if (pago) {
+      setSucursalId(pago.sucursal_id)
+      setFechaPago(pago.fecha_pago)
+      setProfesorId(pago.profesor_id ?? '')
+      setTipoPago(pago.tipo_pago)
+      setAlumnoId(pago.alumno_id)
+      setEstadoAlumno(null)
+      setCargos([])
+      setDisciplinaId(pago.disciplina_id ?? '')
+      setPeriodo(pago.periodo)
+      setDetalle(pago.detalle ?? '')
+      setMonto(String(pago.monto))
+      setFormaPago(pago.forma_pago)
+      setMontoEfectivo(pago.monto_efectivo != null ? String(pago.monto_efectivo) : '')
+      setMontoTransferencia(pago.monto_transferencia != null ? String(pago.monto_transferencia) : '')
+      setParcial(pago.parcial)
+      setError(null)
+      return
+    }
     setSucursalId(sucursalContexto ?? sucursalesActivas[0]?.id ?? '')
     setFechaPago(new Date().toISOString().slice(0, 10))
     setProfesorId('')
@@ -111,7 +137,7 @@ export function PagoFormDrawer({
     setParcial(false)
     setError(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, alumnoPreseleccionado])
+  }, [open, alumnoPreseleccionado, pago])
 
   // Cargo asociado al período se resuelve solo (mismo criterio que antes,
   // sin exponer un selector propio — no forma parte de los 10 campos del form).
@@ -187,27 +213,47 @@ export function PagoFormDrawer({
     setSaving(true)
     setError(null)
     try {
-      const pago = await createPago({
-        alumno_id: alumnoId,
-        cargo_id: cargoId,
-        periodo,
-        sucursal_id: sucursalId,
-        fecha_pago: fechaPago,
-        profesor_id: profesorId || null,
-        disciplina_id: disciplinaId || null,
-        tipo_pago: tipoPago,
-        detalle: detalle.trim() || null,
-        monto: montoNumero,
-        forma_pago: formaPago,
-        monto_efectivo: montoEfectivoNumero,
-        monto_transferencia: montoTransferenciaNumero,
-        parcial,
-        registrado_por: perfil.id,
-        directo: rol === 'admin',
-      })
-      onCreated(pago)
+      if (editando && pago) {
+        const actualizado = await updatePago(pago.id, {
+          alumno_id: alumnoId,
+          cargo_id: cargoId,
+          periodo,
+          sucursal_id: sucursalId,
+          fecha_pago: fechaPago,
+          profesor_id: profesorId || null,
+          disciplina_id: disciplinaId || null,
+          tipo_pago: tipoPago,
+          detalle: detalle.trim() || null,
+          monto: montoNumero,
+          forma_pago: formaPago,
+          monto_efectivo: montoEfectivoNumero,
+          monto_transferencia: montoTransferenciaNumero,
+          parcial,
+        })
+        onUpdated?.(actualizado)
+      } else {
+        const nuevo = await createPago({
+          alumno_id: alumnoId,
+          cargo_id: cargoId,
+          periodo,
+          sucursal_id: sucursalId,
+          fecha_pago: fechaPago,
+          profesor_id: profesorId || null,
+          disciplina_id: disciplinaId || null,
+          tipo_pago: tipoPago,
+          detalle: detalle.trim() || null,
+          monto: montoNumero,
+          forma_pago: formaPago,
+          monto_efectivo: montoEfectivoNumero,
+          monto_transferencia: montoTransferenciaNumero,
+          parcial,
+          registrado_por: perfil.id,
+          directo: rol === 'admin',
+        })
+        onCreated?.(nuevo)
+      }
     } catch {
-      setError('No se pudo registrar el pago. Probá de nuevo.')
+      setError(editando ? 'No se pudo guardar la edición. Probá de nuevo.' : 'No se pudo registrar el pago. Probá de nuevo.')
     } finally {
       setSaving(false)
     }
@@ -217,7 +263,7 @@ export function PagoFormDrawer({
     <Drawer
       open={open}
       onClose={onClose}
-      title="Registrar pago"
+      title={editando ? 'Editar pago' : 'Registrar pago'}
       footer={
         <div className="flex gap-2">
           <button
@@ -233,7 +279,7 @@ export function PagoFormDrawer({
             disabled={saving}
             className="h-11 flex-1 rounded-[10px] bg-accent-cyan font-montserrat text-[13px] font-bold text-text-on-accent outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan disabled:opacity-60 xl:h-9"
           >
-            {saving ? 'Guardando…' : 'Registrar pago'}
+            {saving ? 'Guardando…' : editando ? 'Guardar cambios' : 'Registrar pago'}
           </button>
         </div>
       }
@@ -400,9 +446,11 @@ export function PagoFormDrawer({
         </label>
 
         <p className="font-inter text-[11px] text-text-secondary">
-          {rol === 'admin'
-            ? 'Registrado por admin: queda validado al instante.'
-            : 'Este pago queda pendiente de validación por un admin.'}
+          {editando
+            ? 'Editar no valida el pago — si corresponde, validalo después con el botón "Validar".'
+            : rol === 'admin'
+              ? 'Registrado por admin: queda validado al instante.'
+              : 'Este pago queda pendiente de validación por un admin.'}
         </p>
 
         {error && <p className="font-inter text-[11px] text-estado-error-text">{error}</p>}

@@ -123,6 +123,9 @@ export function PagosPage() {
         {tab === 'pendientes' && rol === 'admin' && (
           <PagosPendientesSection
             reloadToken={reloadToken}
+            alumnos={alumnos}
+            disciplinas={disciplinas}
+            profesores={profesores}
             onValidated={() => setReloadToken((t) => t + 1)}
           />
         )}
