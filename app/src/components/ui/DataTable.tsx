@@ -84,7 +84,7 @@ export function DataTable<T>({
               {columns.map((col, i) => (
                 <th
                   key={i}
-                  className={`whitespace-nowrap px-4 py-2.5 font-inter text-[11px] font-semibold uppercase tracking-[0.04em] text-text-secondary ${col.className ?? ''}`}
+                  className={`whitespace-nowrap px-3 py-2.5 font-inter text-[11px] font-semibold uppercase tracking-[0.04em] text-text-secondary ${col.className ?? ''}`}
                 >
                   {col.header}
                 </th>
@@ -126,7 +126,7 @@ export function DataTable<T>({
                     {columns.map((col, i) => (
                       <td
                         key={i}
-                        className={`whitespace-nowrap px-4 py-3 font-inter text-[13px] text-text-primary ${col.className ?? ''}`}
+                        className={`whitespace-nowrap px-3 py-3 font-inter text-[13px] text-text-primary ${col.className ?? ''}`}
                       >
                         {fijada && i === tagColumnIndex ? (
                           <div className="flex flex-col items-start gap-1">
