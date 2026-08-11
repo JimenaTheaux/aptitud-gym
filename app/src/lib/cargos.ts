@@ -28,3 +28,19 @@ export async function createCargo(input: NuevoCargoInput): Promise<Cargo> {
   if (error) throw error
   return data as Cargo
 }
+
+export type EditarCargoInput = {
+  alumno_id: string
+  periodo: string
+  monto: number
+  disciplina_id: string | null
+}
+
+// Corrección manual de un cargo ya generado (migración 15 — policy de
+// UPDATE admin). No es un recálculo de precio "vivo": sigue siendo el admin
+// quien decide el nuevo monto/período, igual que al crearlo.
+export async function updateCargo(cargoId: string, input: EditarCargoInput): Promise<Cargo> {
+  const { data, error } = await supabase.from('cargos').update(input).eq('id', cargoId).select().single()
+  if (error) throw error
+  return data as Cargo
+}

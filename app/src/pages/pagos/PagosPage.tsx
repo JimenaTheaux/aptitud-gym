@@ -110,6 +110,8 @@ export function PagosPage() {
         {tab === 'historial' && (
           <HistorialAlumnoSection
             alumnos={alumnos}
+            disciplinas={disciplinas}
+            profesores={profesores}
             alumnoId={historialAlumnoId}
             reloadToken={reloadToken}
             onAlumnoChange={setHistorialAlumnoId}

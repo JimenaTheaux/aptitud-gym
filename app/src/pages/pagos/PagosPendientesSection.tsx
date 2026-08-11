@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Check, Edit2 } from 'react-feather'
+import { Check, Edit2, Trash2 } from 'react-feather'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { DataTable } from '../../components/ui/DataTable'
 import { PinButton } from '../../components/ui/PinButton'
 import { usePinnedRows } from '../../hooks/usePinnedRows'
-import { listPagosPendientes, validarPago, type PagoPendienteConDetalle } from '../../lib/pagos'
+import { deletePago, listPagosPendientes, validarPago, type PagoPendienteConDetalle } from '../../lib/pagos'
 import { formatearFecha, formatearMonto, formatearPeriodo } from '../../lib/formato'
 import { PagoFormDrawer } from './PagoFormDrawer'
 import type { Alumno, Disciplina, Profesor } from '../../types/db'
@@ -34,6 +34,9 @@ export function PagosPendientesSection({
   const [aValidar, setAValidar] = useState<PagoPendienteConDetalle | null>(null)
   const [validando, setValidando] = useState(false)
   const [aEditar, setAEditar] = useState<PagoPendienteConDetalle | null>(null)
+  const [aEliminar, setAEliminar] = useState<PagoPendienteConDetalle | null>(null)
+  const [eliminando, setEliminando] = useState(false)
+  const [errorEliminar, setErrorEliminar] = useState<string | null>(null)
 
   async function reload() {
     setLoading(true)
@@ -64,6 +67,21 @@ export function PagosPendientesSection({
       onValidated()
     } finally {
       setValidando(false)
+    }
+  }
+
+  async function handleEliminar() {
+    if (!aEliminar) return
+    setEliminando(true)
+    setErrorEliminar(null)
+    try {
+      await deletePago(aEliminar.id)
+      setAEliminar(null)
+      await reload()
+    } catch {
+      setErrorEliminar('No se pudo eliminar el pago. Probá de nuevo.')
+    } finally {
+      setEliminando(false)
     }
   }
 
@@ -106,6 +124,14 @@ export function PagosPendientesSection({
                 </button>
                 <button
                   type="button"
+                  onClick={() => setAEliminar(p)}
+                  aria-label={`Eliminar pago de ${p.alumno ? `${p.alumno.apellido}, ${p.alumno.nombre}` : 'alumno'}`}
+                  className="shrink-0 text-estado-error-text hover:opacity-80"
+                >
+                  <Trash2 size={14} />
+                </button>
+                <button
+                  type="button"
                   onClick={() => setAValidar(p)}
                   className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-[10px] border border-accent-cyan px-2.5 py-1.5 font-montserrat text-[12px] font-bold text-accent-cyan outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan"
                 >
@@ -127,6 +153,7 @@ export function PagosPendientesSection({
       {limiteAlcanzado && (
         <p className="font-inter text-[11px] text-text-secondary">Máximo 5 filas fijadas.</p>
       )}
+      {errorEliminar && <p className="font-inter text-[11px] text-estado-error-text">{errorEliminar}</p>}
 
       <ConfirmDialog
         open={Boolean(aValidar)}
@@ -139,6 +166,20 @@ export function PagosPendientesSection({
         confirmLabel={validando ? 'Validando…' : 'Validar'}
         onConfirm={handleValidar}
         onCancel={() => setAValidar(null)}
+      />
+
+      <ConfirmDialog
+        open={Boolean(aEliminar)}
+        title="Eliminar pago"
+        message={
+          aEliminar
+            ? `¿Eliminar el pago de ${formatearMonto(aEliminar.monto)} de ${aEliminar.alumno?.apellido}, ${aEliminar.alumno?.nombre}? Esta acción no se puede deshacer.`
+            : ''
+        }
+        confirmLabel={eliminando ? 'Eliminando…' : 'Eliminar'}
+        danger
+        onConfirm={handleEliminar}
+        onCancel={() => setAEliminar(null)}
       />
 
       <PagoFormDrawer

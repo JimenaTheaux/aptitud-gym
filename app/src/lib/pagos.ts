@@ -137,6 +137,14 @@ export async function validarPago(pagoId: string): Promise<void> {
   if (error) throw error
 }
 
+// Eliminación de un pago (migración 15 — policy de DELETE admin). El
+// trigger fn_log_eliminacion (migración 13) ya está instalado en `pagos`,
+// así que queda registrado en registros_eliminados sin lógica adicional acá.
+export async function deletePago(pagoId: string): Promise<void> {
+  const { error } = await supabase.from('pagos').delete().eq('id', pagoId)
+  if (error) throw error
+}
+
 // Alumnos con asistencia registrada en el período dado — base compartida por
 // listDeudores y listSinCargoGenerado.
 async function alumnoIdsConAsistencia(periodo: string): Promise<string[]> {

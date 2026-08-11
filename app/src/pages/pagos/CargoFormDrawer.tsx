@@ -5,7 +5,7 @@ import { FormField } from '../../components/ui/FormField'
 import { PeriodoField } from '../../components/ui/PeriodoField'
 import { SelectField } from '../../components/ui/SelectField'
 import { useAuth } from '../../contexts/AuthContext'
-import { createCargo } from '../../lib/cargos'
+import { createCargo, updateCargo } from '../../lib/cargos'
 import { formatearCantidadDias } from '../../lib/formato'
 import type { Alumno, Cargo, Disciplina } from '../../types/db'
 
@@ -21,17 +21,24 @@ export function CargoFormDrawer({
   alumnos,
   disciplinas,
   alumnoPreseleccionado,
+  cargo,
   onClose,
   onCreated,
+  onUpdated,
 }: {
   open: boolean
   alumnos: Alumno[]
   disciplinas: Disciplina[]
   alumnoPreseleccionado?: string | null
+  // Cargo a editar — si viene seteado, el drawer abre en modo edición
+  // precargado con sus datos en vez de armar un cargo nuevo.
+  cargo?: Cargo | null
   onClose: () => void
-  onCreated: (cargo: Cargo) => void
+  onCreated?: (cargo: Cargo) => void
+  onUpdated?: (cargo: Cargo) => void
 }) {
   const { perfil } = useAuth()
+  const editando = Boolean(cargo)
 
   const [alumnoId, setAlumnoId] = useState('')
   const [periodo, setPeriodo] = useState(periodoActual())
@@ -46,12 +53,20 @@ export function CargoFormDrawer({
 
   useEffect(() => {
     if (!open) return
+    if (cargo) {
+      setAlumnoId(cargo.alumno_id)
+      setPeriodo(cargo.periodo)
+      setDisciplinaId(cargo.disciplina_id ?? '')
+      setMonto(String(cargo.monto))
+      setError(null)
+      return
+    }
     setAlumnoId(alumnoPreseleccionado ?? '')
     setPeriodo(periodoActual())
     setDisciplinaId('')
     setMonto('')
     setError(null)
-  }, [open, alumnoPreseleccionado])
+  }, [open, alumnoPreseleccionado, cargo])
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -72,16 +87,26 @@ export function CargoFormDrawer({
     setSaving(true)
     setError(null)
     try {
-      const cargo = await createCargo({
-        alumno_id: alumnoId,
-        periodo,
-        monto: montoNumero,
-        disciplina_id: disciplinaId || null,
-        created_by: perfil?.id ?? null,
-      })
-      onCreated(cargo)
+      if (editando && cargo) {
+        const actualizado = await updateCargo(cargo.id, {
+          alumno_id: alumnoId,
+          periodo,
+          monto: montoNumero,
+          disciplina_id: disciplinaId || null,
+        })
+        onUpdated?.(actualizado)
+      } else {
+        const nuevo = await createCargo({
+          alumno_id: alumnoId,
+          periodo,
+          monto: montoNumero,
+          disciplina_id: disciplinaId || null,
+          created_by: perfil?.id ?? null,
+        })
+        onCreated?.(nuevo)
+      }
     } catch {
-      setError('No se pudo guardar el cargo. Probá de nuevo.')
+      setError(editando ? 'No se pudo guardar la edición. Probá de nuevo.' : 'No se pudo guardar el cargo. Probá de nuevo.')
     } finally {
       setSaving(false)
     }
@@ -91,7 +116,7 @@ export function CargoFormDrawer({
     <Drawer
       open={open}
       onClose={onClose}
-      title="Nuevo cargo"
+      title={editando ? 'Editar cargo' : 'Nuevo cargo'}
       footer={
         <div className="flex gap-2">
           <button
@@ -107,7 +132,7 @@ export function CargoFormDrawer({
             disabled={saving}
             className="h-11 flex-1 rounded-[10px] bg-accent-cyan font-montserrat text-[13px] font-bold text-text-on-accent outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan disabled:opacity-60 xl:h-9"
           >
-            {saving ? 'Guardando…' : 'Guardar cargo'}
+            {saving ? 'Guardando…' : editando ? 'Guardar cambios' : 'Guardar cargo'}
           </button>
         </div>
       }
