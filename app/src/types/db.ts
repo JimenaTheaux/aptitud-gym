@@ -172,6 +172,34 @@ export type RegistroEliminado = {
   eliminado_at: string
 }
 
+// Turno con hora_salida null de un día anterior a hoy (migración 16, vista
+// turnos_abiertos_prolongados) — huérfano típico de un turno que nunca se
+// cerró (login compartido, corte de red, o el viejo bug de carrera en
+// "Registrar entrada"). Solo lectura, admin-only (filtrado en la vista).
+export type TurnoAbiertoProlongado = {
+  id: string
+  profesor_id: string
+  profesor_nombre: string
+  sucursal_id: string
+  sucursal_nombre: string
+  fecha: string
+  hora_entrada: string | null
+  modulo: Modulo | null
+  dias_abierto: number
+}
+
+// Log de fallas de INSERT/UPDATE en horarios_profesor (migración 16),
+// escrito desde el cliente en el catch de cada operación. Solo admin lee.
+export type ErrorSistema = {
+  id: string
+  operacion: string
+  profesor_id: string | null
+  sucursal_id: string | null
+  detalle: string
+  creado_por: string | null
+  created_at: string
+}
+
 // Genérica, para "fijar fila" en cualquier listado (migración 09). `tabla`
 // identifica el listado ('alumnos', 'deudores', 'historial_pagos', etc.) y
 // `registro_id` es el id de la fila fijada dentro de esa tabla. Límite de 5

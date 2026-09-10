@@ -10,10 +10,13 @@ import { PeriodoField } from '../../components/ui/PeriodoField'
 import { SelectField } from '../../components/ui/SelectField'
 import { TimeField } from '../../components/ui/TimeField'
 import { SucursalFilter } from '../../components/ui/SucursalFilter'
+import { Toast, type ToastTipo } from '../../components/ui/Toast'
 import { useAuth } from '../../contexts/AuthContext'
 import { useSucursal } from '../../contexts/SucursalContext'
+import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { formatearFecha, formatearHora, formatearPeriodo, periodoActual, rangoDelMes } from '../../lib/formato'
 import {
+  TurnoAbiertoError,
   calcularHorasTurno,
   deleteHorarioProfesor,
   formatearHoras,
@@ -125,10 +128,12 @@ function EditarHorarioDrawer({
 export function AsistenciaProfesores() {
   const { rol } = useAuth()
   const { sucursales, sucursalId } = useSucursal()
+  const online = useOnlineStatus()
 
   const [profesores, setProfesores] = useState<Profesor[]>([])
   const [turnosHoy, setTurnosHoy] = useState<HorarioProfesorConNombre[]>([])
   const [savingProfesorId, setSavingProfesorId] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ mensaje: string; tipo: ToastTipo } | null>(null)
 
   const [periodo, setPeriodo] = useState(periodoActual())
   const [horarios, setHorarios] = useState<HorarioProfesorConNombre[]>([])
@@ -191,9 +196,19 @@ export function AsistenciaProfesores() {
     try {
       await registrarEntradaProfesor(profesorId, sucursalId, modulo)
       await Promise.all([cargarRoster(), recargarTabla()])
+      setToast({ mensaje: 'Entrada registrada.', tipo: 'success' })
     } catch (err) {
       console.error(err)
-      setErrorAccion('No se pudo registrar la entrada. Probá de nuevo.')
+      // Re-consultamos el estado real antes de dejar reintentar: si el
+      // insert llegó a la base pero la respuesta se perdió (corte de red),
+      // esto actualiza el botón a "En turno" y evita un segundo intento que
+      // dispararía TURNO_ABIERTO (o, sin el RPC atómico, un duplicado).
+      await cargarRoster().catch(() => {})
+      setErrorAccion(
+        err instanceof TurnoAbiertoError
+          ? 'Este profesor ya tiene un turno abierto — se actualizó el estado.'
+          : 'No se pudo registrar la entrada. Probá de nuevo.',
+      )
     } finally {
       setSavingProfesorId(null)
     }
@@ -205,10 +220,12 @@ export function AsistenciaProfesores() {
     setSavingProfesorId(profesorId)
     setErrorAccion(null)
     try {
-      await registrarSalidaProfesor(turno.id)
+      await registrarSalidaProfesor(turno.id, turno.profesor_id, turno.sucursal_id)
       await Promise.all([cargarRoster(), recargarTabla()])
+      setToast({ mensaje: 'Salida registrada.', tipo: 'success' })
     } catch (err) {
       console.error(err)
+      await cargarRoster().catch(() => {})
       setErrorAccion('No se pudo registrar la salida. Probá de nuevo.')
     } finally {
       setSavingProfesorId(null)
@@ -254,6 +271,12 @@ export function AsistenciaProfesores() {
           </div>
         )}
 
+        {!online && (
+          <p className="rounded-[10px] border border-estado-pendiente-text bg-estado-pendiente-bg px-3 py-2 font-inter text-[12px] text-estado-pendiente-text">
+            Sin conexión — no se pueden registrar entradas/salidas hasta reconectar.
+          </p>
+        )}
+
         {errorAccion && (
           <p className="rounded-[10px] border border-estado-error-text bg-estado-deuda-bg px-3 py-2 font-inter text-[12px] text-estado-error-text">
             {errorAccion}
@@ -268,6 +291,7 @@ export function AsistenciaProfesores() {
               turnoAbierto={turnoAbiertoDe(p.id)}
               saving={savingProfesorId === p.id}
               sucursalDisponible={Boolean(sucursalId)}
+              online={online}
               onRegistrarEntrada={(modulo) => handleRegistrarEntrada(p.id, modulo)}
               onRegistrarSalida={() => handleRegistrarSalida(p.id)}
             />
@@ -352,6 +376,8 @@ export function AsistenciaProfesores() {
         onConfirm={handleConfirmarBorrado}
         onCancel={() => setBorrando(null)}
       />
+
+      <Toast mensaje={toast?.mensaje ?? null} tipo={toast?.tipo} onClose={() => setToast(null)} />
     </AppLayout>
   )
 }

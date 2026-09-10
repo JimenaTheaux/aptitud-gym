@@ -1,5 +1,11 @@
 import { supabase } from './supabase'
-import type { HorarioProfesor, Modulo } from '../types/db'
+import type { HorarioProfesor, Modulo, TurnoAbiertoProlongado } from '../types/db'
+
+// Lanzado por registrarEntradaProfesor cuando el RPC rechaza la entrada
+// porque el profesor ya tiene un turno abierto hoy (migración 16) — permite
+// al llamador distinguir este caso de un error genérico y mostrar un
+// mensaje específico en vez de "no se pudo, probá de nuevo".
+export class TurnoAbiertoError extends Error {}
 
 export type HorarioProfesorConNombre = HorarioProfesor & {
   profesor: { nombre: string } | null
@@ -31,6 +37,27 @@ function horaAhora(): string {
   return new Date().toTimeString().slice(0, 5)
 }
 
+// Best-effort: si el log mismo falla (ej. sin conexión — el mismo corte que
+// hizo fallar la operación original) no debe tapar el error real ni romper
+// el flujo, así que nunca propaga.
+async function logErrorSistema(
+  operacion: 'entrada' | 'salida' | 'edicion',
+  detalle: string,
+  profesorId: string | null,
+  sucursalId: string | null,
+): Promise<void> {
+  try {
+    await supabase.from('errores_sistema').insert({
+      operacion,
+      profesor_id: profesorId,
+      sucursal_id: sucursalId,
+      detalle,
+    })
+  } catch {
+    // no-op
+  }
+}
+
 export async function listHorariosProfesorEnRango(
   inicio: string,
   fin: string,
@@ -59,29 +86,39 @@ export async function listHorariosProfesorHoy(): Promise<HorarioProfesorConNombr
   return listHorariosProfesorEnRango(hoy, hoy)
 }
 
+// Vía RPC (migración 16), no INSERT directo: el server valida de forma
+// atómica que el profesor no tenga ya un turno abierto hoy antes de
+// insertar (ver fn_registrar_entrada_profesor) — un INSERT directo desde acá
+// solo podía chequearlo contra el estado ya cargado en memoria del cliente,
+// que es exactamente la carrera que causaba turnos duplicados.
 export async function registrarEntradaProfesor(
   profesorId: string,
   sucursalId: string,
   modulo: Modulo | null = null,
 ): Promise<HorarioProfesor> {
-  const { data, error } = await supabase
-    .from('horarios_profesor')
-    .insert({
-      profesor_id: profesorId,
-      sucursal_id: sucursalId,
-      fecha: fechaHoy(),
-      hora_entrada: horaAhora(),
-      hora_salida: null,
-      modulo,
-    })
-    .select()
-    .single()
+  const { data, error } = await supabase.rpc('fn_registrar_entrada_profesor', {
+    p_profesor_id: profesorId,
+    p_sucursal_id: sucursalId,
+    p_fecha: fechaHoy(),
+    p_hora_entrada: horaAhora(),
+    p_modulo: modulo,
+  })
 
-  if (error) throw error
+  if (error) {
+    await logErrorSistema('entrada', error.message, profesorId, sucursalId)
+    if (error.message.includes('TURNO_ABIERTO')) {
+      throw new TurnoAbiertoError('El profesor ya tiene un turno abierto hoy.')
+    }
+    throw error
+  }
   return data as HorarioProfesor
 }
 
-export async function registrarSalidaProfesor(horarioId: string): Promise<HorarioProfesor> {
+export async function registrarSalidaProfesor(
+  horarioId: string,
+  profesorId: string | null = null,
+  sucursalId: string | null = null,
+): Promise<HorarioProfesor> {
   const { data, error } = await supabase
     .from('horarios_profesor')
     .update({ hora_salida: horaAhora() })
@@ -89,7 +126,10 @@ export async function registrarSalidaProfesor(horarioId: string): Promise<Horari
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    await logErrorSistema('salida', error.message, profesorId, sucursalId)
+    throw error
+  }
   return data as HorarioProfesor
 }
 
@@ -104,13 +144,45 @@ export async function updateHorarioProfesor(
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    await logErrorSistema('edicion', error.message, null, input.sucursal_id)
+    throw error
+  }
   return data as HorarioProfesor
 }
 
 export async function deleteHorarioProfesor(id: string): Promise<void> {
   const { error } = await supabase.from('horarios_profesor').delete().eq('id', id)
   if (error) throw error
+}
+
+// Turnos con hora_salida null de días anteriores a hoy (migración 16, vista
+// turnos_abiertos_prolongados) — huérfanos para revisar/cerrar desde el
+// submenú admin "Sistema".
+export async function listTurnosAbiertosProlongados(): Promise<TurnoAbiertoProlongado[]> {
+  const { data, error } = await supabase
+    .from('turnos_abiertos_prolongados')
+    .select('*')
+    .order('fecha', { ascending: true })
+
+  if (error) throw error
+  return (data as TurnoAbiertoProlongado[]) ?? []
+}
+
+// Cierre manual de un turno huérfano desde la pantalla de admin — se fija a
+// las 23:59 de la fecha del turno (no "ahora", que podría ser días después)
+// como valor razonable por default; si hace falta un horario distinto, se
+// puede afinar después desde "Editar" en la tabla de Asistencia Profesores.
+export async function cerrarTurnoManual(id: string): Promise<HorarioProfesor> {
+  const { data, error } = await supabase
+    .from('horarios_profesor')
+    .update({ hora_salida: '23:59' })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as HorarioProfesor
 }
 
 function horasEntre(entrada: string, salida: string): number {

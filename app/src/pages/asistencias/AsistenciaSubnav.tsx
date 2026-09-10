@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 const TABS = [
   { path: '/asistencias', label: 'Alumnos' },
   { path: '/asistencias/profesores', label: 'Profesores' },
+  { path: '/asistencias/sistema', label: 'Sistema' },
 ]
 
 export function AsistenciaSubnav() {

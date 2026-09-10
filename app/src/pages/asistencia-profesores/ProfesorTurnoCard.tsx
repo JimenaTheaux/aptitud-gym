@@ -9,6 +9,7 @@ export function ProfesorTurnoCard({
   turnoAbierto,
   saving,
   sucursalDisponible,
+  online,
   onRegistrarEntrada,
   onRegistrarSalida,
 }: {
@@ -19,12 +20,15 @@ export function ProfesorTurnoCard({
   // auto-selecciona sola); registrar salida no la necesita, solo actualiza
   // la fila ya abierta.
   sucursalDisponible: boolean
+  // Sin conexión no se intenta ni entrada ni salida — evita el escenario de
+  // "parece que no pasó nada" y un reintento que termine duplicando el turno.
+  online: boolean
   onRegistrarEntrada: (modulo: Modulo | null) => void
   onRegistrarSalida: () => void
 }) {
   const [modulo, setModulo] = useState<Modulo | null>(null)
   const enTurno = Boolean(turnoAbierto)
-  const disabled = saving || (!enTurno && !sucursalDisponible)
+  const disabled = saving || !online || (!enTurno && !sucursalDisponible)
 
   function toggleModulo(valor: Modulo) {
     setModulo((actual) => (actual === valor ? null : valor))
@@ -55,6 +59,10 @@ export function ProfesorTurnoCard({
         <p className="font-inter text-[11px] text-text-secondary">
           Entrada: {formatearHora(turnoAbierto.hora_entrada)} ({formatearFecha(turnoAbierto.fecha)})
         </p>
+      )}
+
+      {!online && (
+        <p className="font-inter text-[11px] font-semibold text-estado-deuda-text">Sin conexión</p>
       )}
 
       {!enTurno && (
@@ -95,7 +103,7 @@ export function ProfesorTurnoCard({
         className="flex h-7 items-center justify-center gap-1 rounded-lg border border-accent-cyan font-montserrat text-[11px] font-bold text-accent-cyan outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-accent-cyan disabled:opacity-60"
       >
         {enTurno ? <LogOut size={12} /> : <LogIn size={12} />}
-        {saving ? 'Guardando…' : enTurno ? 'Registrar salida' : 'Registrar entrada'}
+        {saving ? 'Guardando…' : !online ? 'Sin conexión' : enTurno ? 'Registrar salida' : 'Registrar entrada'}
       </button>
     </div>
   )

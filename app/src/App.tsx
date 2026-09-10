@@ -17,6 +17,7 @@ import { ResumenProfesor } from './pages/resumenes/ResumenProfesor'
 import { ResumenProfesores } from './pages/resumenes/ResumenProfesores'
 import { ResumenTurnos } from './pages/resumenes/ResumenTurnos'
 import { AsistenciaProfesores } from './pages/asistencia-profesores/AsistenciaProfesores'
+import { SistemaProfesores } from './pages/asistencia-profesores/SistemaProfesores'
 import { AppLayout } from './components/layout/AppLayout'
 import { StyleGuidePage } from './pages/StyleGuidePage'
 
@@ -60,6 +61,7 @@ function App() {
                 <Route path="/alumnos" element={<AlumnosPage />} />
                 <Route path="/asistencias" element={<AsistenciasPage />} />
                 <Route path="/asistencias/profesores" element={<AsistenciaProfesores />} />
+                <Route path="/asistencias/sistema" element={<SistemaProfesores />} />
                 <Route path="/pagos" element={<PagosPage />} />
                 <Route path="/resumenes" element={<ResumenesRoute />} />
                 <Route path="/resumenes/profesores" element={<ResumenProfesores />} />
