@@ -14,10 +14,14 @@ type PeriodoFieldProps = {
   id?: string
   anioDesde?: number
   anioHasta?: number
+  // Para usarlo como filtro: agrega al selector de mes una opción vacía con
+  // este texto (ej. "Todos los meses") que emite '' = sin filtro. Mientras no
+  // haya mes elegido, el año queda deshabilitado mostrando el actual.
+  opcionTodos?: string
 }
 
 const selectClass =
-  'h-11 w-full rounded-[10px] border bg-bg-input px-3 font-inter text-base text-text-primary outline-none transition-colors focus:border-accent-cyan focus-visible:ring-2 focus-visible:ring-accent-cyan xl:h-10 xl:text-[13px]'
+  'h-11 w-full rounded-[10px] border bg-bg-input px-3 font-inter text-base text-text-primary outline-none transition-colors focus:border-accent-cyan focus-visible:ring-2 focus-visible:ring-accent-cyan disabled:cursor-not-allowed disabled:opacity-50 xl:h-10 xl:text-[13px]'
 
 export function PeriodoField({
   label,
@@ -28,6 +32,7 @@ export function PeriodoField({
   id,
   anioDesde,
   anioHasta,
+  opcionTodos,
 }: PeriodoFieldProps) {
   const fieldId = id ?? label.toLowerCase().replace(/\s+/g, '-')
   const errorId = error ? `${fieldId}-error` : undefined
@@ -67,9 +72,14 @@ export function PeriodoField({
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={errorId}
-          onChange={(e) => actualizar(e.target.value, anioValue || String(anioActual))}
+          onChange={(e) =>
+            opcionTodos && !e.target.value
+              ? onChange('')
+              : actualizar(e.target.value, anioValue || String(anioActual))
+          }
           className={`${selectClass} ${error ? 'border-estado-error-text' : 'border-border-subtle'}`}
         >
+          {opcionTodos && <option value="">{opcionTodos}</option>}
           {MESES.map((nombre, i) => (
             <option key={nombre} value={String(i + 1).padStart(2, '0')}>
               {nombre}
@@ -78,7 +88,9 @@ export function PeriodoField({
         </select>
 
         <select
-          value={anioValue}
+          value={opcionTodos ? anioValue || String(anioActual) : anioValue}
+          disabled={Boolean(opcionTodos) && !mesValue}
+          aria-label={`${label} — año`}
           required={required}
           aria-invalid={error ? true : undefined}
           aria-describedby={errorId}

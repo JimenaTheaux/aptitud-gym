@@ -5,7 +5,7 @@ import { AppLayout } from '../../components/layout/AppLayout'
 import { WhatsappIcon } from '../../components/icons/WhatsappIcon'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { DataTable } from '../../components/ui/DataTable'
-import { DateField } from '../../components/ui/DateField'
+import { PeriodoField } from '../../components/ui/PeriodoField'
 import { PinButton } from '../../components/ui/PinButton'
 import { useAuth } from '../../contexts/AuthContext'
 import { useSucursal } from '../../contexts/SucursalContext'
@@ -25,8 +25,7 @@ export function AlumnosPage() {
   const [alumnos, setAlumnos] = useState<Alumno[]>([])
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')
-  const [filtroDesde, setFiltroDesde] = useState('')
-  const [filtroHasta, setFiltroHasta] = useState('')
+  const [filtroPeriodo, setFiltroPeriodo] = useState('') // 'yyyy-MM' o '' = todos
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [alumnoEditando, setAlumnoEditando] = useState<Alumno | null>(null)
   const [borrando, setBorrando] = useState<Alumno | null>(null)
@@ -58,15 +57,13 @@ export function AlumnosPage() {
   )
 
   // created_at es timestamptz: se pasa al día argentino antes de comparar con
-  // Desde/Hasta (inclusivos), así un alta de 21:00–23:59 ART cae en su día y
-  // no en el siguiente — ver lib/fecha.ts.
+  // el período 'yyyy-MM', así un alta del último día del mes a las 21:00–23:59
+  // ART cae en ese mes y no en el siguiente — ver lib/fecha.ts.
   const alumnosFiltrados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
     return alumnosOrdenados.filter((a) => {
-      if (filtroDesde || filtroHasta) {
-        const fechaAlta = fechaLocalISO(new Date(a.created_at))
-        if (filtroDesde && fechaAlta < filtroDesde) return false
-        if (filtroHasta && fechaAlta > filtroHasta) return false
+      if (filtroPeriodo && fechaLocalISO(new Date(a.created_at)).slice(0, 7) !== filtroPeriodo) {
+        return false
       }
       return (
         !texto ||
@@ -75,7 +72,7 @@ export function AlumnosPage() {
         a.nombre.toLowerCase().includes(texto)
       )
     })
-  }, [alumnosOrdenados, busqueda, filtroDesde, filtroHasta])
+  }, [alumnosOrdenados, busqueda, filtroPeriodo])
 
   // Numeración "#" solo visual, según el orden en pantalla. DataTable sube las
   // fijadas arriba con un sort estable; se replica acá el mismo sort para
@@ -85,8 +82,6 @@ export function AlumnosPage() {
       .sort((a, b) => Number(estaFijado(b.id)) - Number(estaFijado(a.id)))
       .map((a, i) => [a.id, i + 1]),
   )
-
-  const hayFiltroFecha = Boolean(filtroDesde || filtroHasta)
 
   if (rol === 'kiosco') return <Navigate to="/" replace />
 
@@ -170,52 +165,31 @@ export function AlumnosPage() {
           )}
         </div>
 
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-          <input
-            type="text"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por apellido, nombre o DNI…"
-            aria-label="Buscar alumno"
-            className="h-11 w-full rounded-[10px] border border-border-subtle bg-bg-input pl-9 pr-3 font-inter text-base text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent-cyan xl:h-10 xl:text-[13px]"
-          />
-        </div>
-
-        <div className="flex flex-col gap-3 rounded-2xl border border-border-subtle bg-bg-card p-4 lg:flex-row lg:items-end">
-          <div className="flex-1">
-            <DateField
-              label="Alta desde"
-              value={filtroDesde}
-              onChange={setFiltroDesde}
-              max={filtroHasta || undefined}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar por apellido, nombre o DNI…"
+              aria-label="Buscar alumno"
+              className="h-11 w-full rounded-[10px] border border-border-subtle bg-bg-input pl-9 pr-3 font-inter text-base text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent-cyan xl:h-10 xl:text-[13px]"
             />
           </div>
-          <div className="flex-1">
-            <DateField
-              label="Alta hasta"
-              value={filtroHasta}
-              onChange={setFiltroHasta}
-              min={filtroDesde || undefined}
+          <div className="sm:w-[280px]">
+            <PeriodoField
+              label="Período de alta"
+              value={filtroPeriodo}
+              onChange={setFiltroPeriodo}
+              opcionTodos="Todos los meses"
             />
           </div>
-          {hayFiltroFecha && (
-            <button
-              type="button"
-              onClick={() => {
-                setFiltroDesde('')
-                setFiltroHasta('')
-              }}
-              className="h-11 shrink-0 rounded-[10px] border border-border-subtle px-4 font-montserrat text-[13px] font-bold text-text-secondary hover:text-text-primary xl:h-10"
-            >
-              Limpiar fechas
-            </button>
-          )}
         </div>
 
         <div className="sticky top-24 z-20 flex items-center justify-between rounded-[10px] border border-border-subtle bg-bg-input px-4 py-2.5">
           <span className="font-inter text-[13px] text-text-secondary">
-            {busqueda.trim() || hayFiltroFecha ? 'Según filtros aplicados' : 'Total registrados'}
+            {busqueda.trim() || filtroPeriodo ? 'Según filtros aplicados' : 'Total registrados'}
           </span>
           <p className="font-montserrat text-[15px] font-extrabold tabular-nums text-text-primary">
             {loading ? '—' : alumnosFiltrados.length} alumno
@@ -293,7 +267,7 @@ export function AlumnosPage() {
           // El tag "Fijado" sigue en "Alta", no en la columna angosta "#".
           tagColumnIndex={1}
           emptyMessage={
-            busqueda.trim() || hayFiltroFecha
+            busqueda.trim() || filtroPeriodo
               ? 'Ningún alumno coincide con los filtros.'
               : 'Todavía no hay alumnos registrados.'
           }
