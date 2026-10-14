@@ -5,12 +5,14 @@ import { AppLayout } from '../../components/layout/AppLayout'
 import { WhatsappIcon } from '../../components/icons/WhatsappIcon'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { DataTable } from '../../components/ui/DataTable'
+import { DateField } from '../../components/ui/DateField'
 import { PinButton } from '../../components/ui/PinButton'
 import { useAuth } from '../../contexts/AuthContext'
 import { useSucursal } from '../../contexts/SucursalContext'
 import { usePinnedRows } from '../../hooks/usePinnedRows'
 import { deleteAlumno, listAlumnos } from '../../lib/alumnos'
 import { getConfiguracionWhatsapp } from '../../lib/configuracion'
+import { fechaLocalISO } from '../../lib/fecha'
 import { formatearCantidadDias, formatearFecha } from '../../lib/formato'
 import { aplicarPlantilla, linkWhatsapp, registrarWhatsappEnvio } from '../../lib/whatsapp'
 import { AltaAlumnoForm } from './AltaAlumnoForm'
@@ -23,6 +25,8 @@ export function AlumnosPage() {
   const [alumnos, setAlumnos] = useState<Alumno[]>([])
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')
+  const [filtroDesde, setFiltroDesde] = useState('')
+  const [filtroHasta, setFiltroHasta] = useState('')
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [alumnoEditando, setAlumnoEditando] = useState<Alumno | null>(null)
   const [borrando, setBorrando] = useState<Alumno | null>(null)
@@ -53,16 +57,36 @@ export function AlumnosPage() {
     [alumnos],
   )
 
+  // created_at es timestamptz: se pasa al día argentino antes de comparar con
+  // Desde/Hasta (inclusivos), así un alta de 21:00–23:59 ART cae en su día y
+  // no en el siguiente — ver lib/fecha.ts.
   const alumnosFiltrados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
-    if (!texto) return alumnosOrdenados
-    return alumnosOrdenados.filter(
-      (a) =>
+    return alumnosOrdenados.filter((a) => {
+      if (filtroDesde || filtroHasta) {
+        const fechaAlta = fechaLocalISO(new Date(a.created_at))
+        if (filtroDesde && fechaAlta < filtroDesde) return false
+        if (filtroHasta && fechaAlta > filtroHasta) return false
+      }
+      return (
+        !texto ||
         a.dni.toLowerCase().includes(texto) ||
         a.apellido.toLowerCase().includes(texto) ||
-        a.nombre.toLowerCase().includes(texto),
-    )
-  }, [alumnosOrdenados, busqueda])
+        a.nombre.toLowerCase().includes(texto)
+      )
+    })
+  }, [alumnosOrdenados, busqueda, filtroDesde, filtroHasta])
+
+  // Numeración "#" solo visual, según el orden en pantalla. DataTable sube las
+  // fijadas arriba con un sort estable; se replica acá el mismo sort para
+  // numerar en ese orden (DataTable lo vuelve a aplicar sin cambiar nada).
+  const numeroPorId = new Map(
+    [...alumnosFiltrados]
+      .sort((a, b) => Number(estaFijado(b.id)) - Number(estaFijado(a.id)))
+      .map((a, i) => [a.id, i + 1]),
+  )
+
+  const hayFiltroFecha = Boolean(filtroDesde || filtroHasta)
 
   if (rol === 'kiosco') return <Navigate to="/" replace />
 
@@ -130,10 +154,6 @@ export function AlumnosPage() {
             <h1 className="font-montserrat text-xl font-extrabold text-text-primary">
               Alumnos
             </h1>
-            <p className="mt-1 font-inter text-[13px] text-text-secondary">
-              {alumnos.length} alumno{alumnos.length === 1 ? '' : 's'} registrado
-              {alumnos.length === 1 ? '' : 's'}.
-            </p>
           </div>
           {(rol === 'admin' || rol === 'profesor') && (
             <button
@@ -162,8 +182,58 @@ export function AlumnosPage() {
           />
         </div>
 
+        <div className="flex flex-col gap-3 rounded-2xl border border-border-subtle bg-bg-card p-4 lg:flex-row lg:items-end">
+          <div className="flex-1">
+            <DateField
+              label="Alta desde"
+              value={filtroDesde}
+              onChange={setFiltroDesde}
+              max={filtroHasta || undefined}
+            />
+          </div>
+          <div className="flex-1">
+            <DateField
+              label="Alta hasta"
+              value={filtroHasta}
+              onChange={setFiltroHasta}
+              min={filtroDesde || undefined}
+            />
+          </div>
+          {hayFiltroFecha && (
+            <button
+              type="button"
+              onClick={() => {
+                setFiltroDesde('')
+                setFiltroHasta('')
+              }}
+              className="h-11 shrink-0 rounded-[10px] border border-border-subtle px-4 font-montserrat text-[13px] font-bold text-text-secondary hover:text-text-primary xl:h-10"
+            >
+              Limpiar fechas
+            </button>
+          )}
+        </div>
+
+        <div className="sticky top-24 z-20 flex items-center justify-between rounded-[10px] border border-border-subtle bg-bg-input px-4 py-2.5">
+          <span className="font-inter text-[13px] text-text-secondary">
+            {busqueda.trim() || hayFiltroFecha ? 'Según filtros aplicados' : 'Total registrados'}
+          </span>
+          <p className="font-montserrat text-[15px] font-extrabold tabular-nums text-text-primary">
+            {loading ? '—' : alumnosFiltrados.length} alumno
+            {alumnosFiltrados.length === 1 ? '' : 's'}
+          </p>
+        </div>
+
         <DataTable<Alumno>
           columns={[
+            {
+              header: '#',
+              accessor: (a) => (
+                <span className="font-montserrat tabular-nums text-text-muted">
+                  {numeroPorId.get(a.id)}
+                </span>
+              ),
+              className: 'w-px text-right',
+            },
             { header: 'Alta', accessor: (a) => formatearFecha(a.created_at) },
             { header: 'Apellido y nombre', accessor: (a) => `${a.apellido}, ${a.nombre}` },
             { header: 'Sucursal', accessor: (a) => sucursalNombre(a.sucursal_alta_id) },
@@ -220,9 +290,11 @@ export function AlumnosPage() {
           keyExtractor={(a) => a.id}
           loading={loading}
           tablaId="alumnos"
+          // El tag "Fijado" sigue en "Alta", no en la columna angosta "#".
+          tagColumnIndex={1}
           emptyMessage={
-            busqueda.trim()
-              ? 'Ningún alumno coincide con la búsqueda.'
+            busqueda.trim() || hayFiltroFecha
+              ? 'Ningún alumno coincide con los filtros.'
               : 'Todavía no hay alumnos registrados.'
           }
         />
