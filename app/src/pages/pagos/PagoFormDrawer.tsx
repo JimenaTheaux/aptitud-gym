@@ -10,6 +10,7 @@ import { EstadoCuentaCard } from '../Checkin/EstadoCuentaCard'
 import { useAuth } from '../../contexts/AuthContext'
 import { useSucursal } from '../../contexts/SucursalContext'
 import { listCargosByAlumno } from '../../lib/cargos'
+import { fechaLocalISO } from '../../lib/fecha'
 import { createPago, updatePago } from '../../lib/pagos'
 import type { EstadoCuenta } from '../../lib/estadoCuenta'
 import type { Alumno, Cargo, Disciplina, FormaPago, Pago, Profesor, TipoPago } from '../../types/db'
@@ -121,7 +122,7 @@ export function PagoFormDrawer({
       return
     }
     setSucursalId(sucursalContexto ?? sucursalesActivas[0]?.id ?? '')
-    setFechaPago(new Date().toISOString().slice(0, 10))
+    setFechaPago(fechaLocalISO())
     setProfesorId('')
     setTipoPago('cuota')
     setAlumnoId(alumnoPreseleccionado ?? '')

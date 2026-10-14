@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { AppLayout } from '../../components/layout/AppLayout'
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { DataTable } from '../../components/ui/DataTable'
 import { DateField } from '../../components/ui/DateField'
+import { Drawer } from '../../components/ui/Drawer'
 import { SelectField } from '../../components/ui/SelectField'
+import { TimeField } from '../../components/ui/TimeField'
 import { useAuth } from '../../contexts/AuthContext'
 import { formatearFecha, formatearHora } from '../../lib/formato'
 import {
@@ -14,22 +15,105 @@ import {
   type ErrorSistemaConDetalle,
 } from '../../lib/erroresSistema'
 import {
+  calcularHorasTurno,
   cerrarTurnoManual,
+  formatearHoras,
   listTurnosAbiertosProlongados,
 } from '../../lib/horariosProfesor'
 import { AsistenciaSubnav } from '../asistencias/AsistenciaSubnav'
 import type { TurnoAbiertoProlongado } from '../../types/db'
 
 function formatearFechaHora(iso: string): string {
-  const hora = new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+  // hourCycle h23: es-AR usa 12 h por defecto ("03:00 p. m.") — la app es 24 h.
+  const hora = new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
   return `${formatearFecha(iso)} · ${hora}`
+}
+
+const CERRAR_TURNO_FORM_ID = 'cerrar-turno-form'
+
+// Cierre manual de un turno huérfano: la admin ingresa la hora de salida real
+// (corroborada con el profesor) — sin valor por default, para no inventar
+// horas. Muestra la duración resultante como control antes de guardar.
+function CerrarTurnoDrawer({
+  turno,
+  onClose,
+  onCerrado,
+}: {
+  turno: TurnoAbiertoProlongado | null
+  onClose: () => void
+  onCerrado: () => void
+}) {
+  const [horaSalida, setHoraSalida] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setHoraSalida('')
+    setError(null)
+  }, [turno])
+
+  if (!turno) return null
+
+  const horas = horaSalida ? calcularHorasTurno(turno.hora_entrada, horaSalida) : null
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    if (!horaSalida) {
+      setError('Indicá la hora de salida.')
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      await cerrarTurnoManual(turno!.id, horaSalida)
+      onCerrado()
+    } catch (err) {
+      console.error(err)
+      setError('No se pudo cerrar el turno.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Drawer
+      open
+      onClose={onClose}
+      title={`Cerrar turno — ${turno.profesor_nombre}`}
+      footer={
+        <button
+          type="submit"
+          form={CERRAR_TURNO_FORM_ID}
+          disabled={saving}
+          className="h-11 w-full rounded-[10px] bg-accent-cyan font-montserrat text-[13px] font-bold text-text-on-accent outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan disabled:opacity-60 xl:h-9"
+        >
+          {saving ? 'Guardando…' : 'Cerrar turno'}
+        </button>
+      }
+    >
+      <form id={CERRAR_TURNO_FORM_ID} onSubmit={handleSubmit} className="flex flex-col gap-4 xl:gap-3">
+        <p className="font-inter text-[13px] text-text-secondary">
+          Turno del {formatearFecha(turno.fecha)}, entrada{' '}
+          {turno.hora_entrada ? formatearHora(turno.hora_entrada) : '—'}. Si la salida es menor que la
+          entrada, se toma como del día siguiente.
+        </p>
+
+        <TimeField label="Hora salida" value={horaSalida} onChange={setHoraSalida} required />
+
+        {horas !== null && (
+          <p className="font-inter text-[13px] text-text-secondary">Duración: {formatearHoras(horas)}</p>
+        )}
+
+        {error && <p className="font-inter text-[11px] text-estado-error-text">{error}</p>}
+      </form>
+    </Drawer>
+  )
 }
 
 function TurnosAbiertosProlongadosSection() {
   const [turnos, setTurnos] = useState<TurnoAbiertoProlongado[]>([])
   const [loading, setLoading] = useState(true)
   const [cerrando, setCerrando] = useState<TurnoAbiertoProlongado | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
   async function cargar() {
     setLoading(true)
@@ -44,17 +128,9 @@ function TurnosAbiertosProlongadosSection() {
     cargar()
   }, [])
 
-  async function handleConfirmarCierre() {
-    if (!cerrando) return
-    try {
-      await cerrarTurnoManual(cerrando.id)
-      setCerrando(null)
-      await cargar()
-    } catch (err) {
-      console.error(err)
-      setError('No se pudo cerrar el turno.')
-      setCerrando(null)
-    }
+  async function handleCerrado() {
+    setCerrando(null)
+    await cargar()
   }
 
   return (
@@ -62,15 +138,9 @@ function TurnosAbiertosProlongadosSection() {
       <div>
         <h2 className="font-montserrat text-base font-bold text-text-primary">Turnos abiertos prolongados</h2>
         <p className="mt-1 font-inter text-[13px] text-text-secondary">
-          Turnos sin hora de salida de días anteriores a hoy — probable turno huérfano.
+          Turnos sin hora de salida abiertos hace más de 14 h — probable turno huérfano.
         </p>
       </div>
-
-      {error && (
-        <p className="rounded-[10px] border border-estado-error-text bg-estado-deuda-bg px-3 py-2 font-inter text-[12px] text-estado-error-text">
-          {error}
-        </p>
-      )}
 
       <DataTable<TurnoAbiertoProlongado>
         columns={[
@@ -100,18 +170,7 @@ function TurnosAbiertosProlongadosSection() {
         emptyMessage="Sin turnos abiertos prolongados."
       />
 
-      <ConfirmDialog
-        open={Boolean(cerrando)}
-        title="Cerrar turno"
-        message={
-          cerrando
-            ? `¿Cerrar el turno de ${cerrando.profesor_nombre} del ${formatearFecha(cerrando.fecha)}? Se registra la salida a las 23:59 de esa fecha — se puede afinar después desde "Editar" en Asistencia Profesores.`
-            : ''
-        }
-        confirmLabel="Cerrar turno"
-        onConfirm={handleConfirmarCierre}
-        onCancel={() => setCerrando(null)}
-      />
+      <CerrarTurnoDrawer turno={cerrando} onClose={() => setCerrando(null)} onCerrado={handleCerrado} />
     </div>
   )
 }

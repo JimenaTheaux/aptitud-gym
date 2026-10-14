@@ -16,12 +16,13 @@ import { useSucursal } from '../../contexts/SucursalContext'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { formatearFecha, formatearHora, formatearPeriodo, periodoActual, rangoDelMes } from '../../lib/formato'
 import {
+  SinTurnoAbiertoError,
   TurnoAbiertoError,
   calcularHorasTurno,
   deleteHorarioProfesor,
   formatearHoras,
   listHorariosProfesorEnRango,
-  listHorariosProfesorHoy,
+  listTurnosAbiertos,
   registrarEntradaProfesor,
   registrarSalidaProfesor,
   updateHorarioProfesor,
@@ -131,7 +132,7 @@ export function AsistenciaProfesores() {
   const online = useOnlineStatus()
 
   const [profesores, setProfesores] = useState<Profesor[]>([])
-  const [turnosHoy, setTurnosHoy] = useState<HorarioProfesorConNombre[]>([])
+  const [turnosAbiertos, setTurnosAbiertos] = useState<HorarioProfesorConNombre[]>([])
   const [savingProfesorId, setSavingProfesorId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ mensaje: string; tipo: ToastTipo } | null>(null)
 
@@ -145,9 +146,9 @@ export function AsistenciaProfesores() {
   const filtroSucursalDeshabilitado = sucursales.filter((s) => s.activa).length <= 1
 
   async function cargarRoster() {
-    const [profesoresData, turnosData] = await Promise.all([listProfesores(), listHorariosProfesorHoy()])
+    const [profesoresData, turnosData] = await Promise.all([listProfesores(), listTurnosAbiertos()])
     setProfesores(profesoresData.filter((p) => p.activo))
-    setTurnosHoy(turnosData)
+    setTurnosAbiertos(turnosData)
   }
 
   useEffect(() => {
@@ -178,9 +179,11 @@ export function AsistenciaProfesores() {
   if (rol === 'kiosco') return <Navigate to="/" replace />
 
   function turnoAbiertoDe(profesorId: string): HorarioProfesorConNombre | null {
-    const abiertos = turnosHoy.filter((h) => h.profesor_id === profesorId && !h.hora_salida)
+    const abiertos = turnosAbiertos.filter((h) => h.profesor_id === profesorId && !h.hora_salida)
     if (abiertos.length === 0) return null
-    return abiertos.sort((a, b) => (a.hora_entrada! < b.hora_entrada! ? 1 : -1))[0]
+    // El más reciente por fecha y hora — mismo criterio que fn_registrar_salida_profesor.
+    const clave = (h: HorarioProfesorConNombre) => `${h.fecha} ${h.hora_entrada ?? ''}`
+    return abiertos.sort((a, b) => (clave(a) < clave(b) ? 1 : -1))[0]
   }
 
   async function recargarTabla() {
@@ -220,13 +223,17 @@ export function AsistenciaProfesores() {
     setSavingProfesorId(profesorId)
     setErrorAccion(null)
     try {
-      await registrarSalidaProfesor(turno.id, turno.profesor_id, turno.sucursal_id)
+      await registrarSalidaProfesor(turno.profesor_id, turno.sucursal_id)
       await Promise.all([cargarRoster(), recargarTabla()])
       setToast({ mensaje: 'Salida registrada.', tipo: 'success' })
     } catch (err) {
       console.error(err)
       await cargarRoster().catch(() => {})
-      setErrorAccion('No se pudo registrar la salida. Probá de nuevo.')
+      setErrorAccion(
+        err instanceof SinTurnoAbiertoError
+          ? 'Este profesor ya no tiene un turno abierto — se actualizó el estado.'
+          : 'No se pudo registrar la salida. Probá de nuevo.',
+      )
     } finally {
       setSavingProfesorId(null)
     }

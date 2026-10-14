@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { fechaLocalISO, horaLocal } from './fecha'
 import { rangoDelMes } from './formato'
 import type { Asistencia, Disciplina } from '../types/db'
 
@@ -103,11 +104,11 @@ export async function deleteAsistencia(id: string): Promise<void> {
 }
 
 export function horaActual() {
-  return new Date().toTimeString().slice(0, 5)
+  return horaLocal()
 }
 
 function fechaActual() {
-  return new Date().toISOString().slice(0, 10)
+  return fechaLocalISO()
 }
 
 // Disciplinas de horario_libre (ej. musculación): se registra la hora real, sin

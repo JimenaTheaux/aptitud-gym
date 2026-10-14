@@ -196,7 +196,12 @@ export type ErrorSistema = {
   profesor_id: string | null
   sucursal_id: string | null
   detalle: string
+  // default auth.uid() en el server (migración 18)
   creado_por: string | null
+  // Reloj del dispositivo al registrar el error y su navegador (migración 18);
+  // null en errores anteriores a esa migración.
+  cliente_ts: string | null
+  user_agent: string | null
   created_at: string
 }
 

@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { diaSemanaISO, fechaLocalISO, sumarDiasISO } from './fecha'
 import { periodoActual, rangoDelMes } from './formato'
 import type { Asistencia } from '../types/db'
 
@@ -23,15 +24,13 @@ export type ResumenMensualData = MovimientoAlumnos & {
 // Semana calendario actual (domingo a sábado), usada para "horarios de mayor
 // ocupación por semana" y el movimiento de corto plazo del resumen de profesor.
 export function inicioSemanaActual(): string {
-  const hoy = new Date()
-  hoy.setDate(hoy.getDate() - hoy.getDay())
-  return hoy.toISOString().slice(0, 10)
+  const hoy = fechaLocalISO()
+  return sumarDiasISO(hoy, -diaSemanaISO(hoy))
 }
 
 export function finSemanaActual(): string {
-  const hoy = new Date()
-  hoy.setDate(hoy.getDate() + (6 - hoy.getDay()))
-  return hoy.toISOString().slice(0, 10)
+  const hoy = fechaLocalISO()
+  return sumarDiasISO(hoy, 6 - diaSemanaISO(hoy))
 }
 
 async function listAsistenciasEnRango(inicio: string, fin: string): Promise<Asistencia[]> {

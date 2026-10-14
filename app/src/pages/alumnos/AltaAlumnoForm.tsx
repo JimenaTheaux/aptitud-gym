@@ -5,6 +5,7 @@ import { FormField } from '../../components/ui/FormField'
 import { SelectField } from '../../components/ui/SelectField'
 import { useSucursal } from '../../contexts/SucursalContext'
 import { createAlumno, updateAlumno, DniDuplicadoError } from '../../lib/alumnos'
+import { hoyISO } from '../../lib/formato'
 import type { Alumno, CantidadDias } from '../../types/db'
 
 const DNI_REGEX = /^\d{6,10}$/
@@ -17,10 +18,6 @@ const CANTIDAD_DIAS_OPTIONS: { value: CantidadDias; label: string }[] = [
   { value: '5', label: '5 días' },
   { value: 'pase_libre', label: 'Pase libre' },
 ]
-
-function hoyISO() {
-  return new Date().toISOString().slice(0, 10)
-}
 
 function celularEfectivo(valor: string) {
   const limpio = valor.trim()

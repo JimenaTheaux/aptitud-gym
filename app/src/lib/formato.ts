@@ -85,10 +85,8 @@ export function rangoDelMes(periodo: string): { inicio: string; fin: string } {
   return { inicio, fin }
 }
 
-export function hoyISO(): string {
-  const hoy = new Date()
-  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`
-}
+// "Hoy" en hora argentina — ver lib/fecha.ts.
+export { fechaLocalISO as hoyISO } from './fecha'
 
 // Semana calendario lunes-domingo (mismo criterio que el calendario de DateField)
 // que contiene hoy — usado por el atajo "Esta semana" de los filtros de rango.
