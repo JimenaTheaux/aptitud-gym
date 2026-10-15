@@ -143,7 +143,9 @@ export function AlumnosPage() {
 
   return (
     <AppLayout>
-      <div className="mx-auto flex max-w-4xl flex-col gap-5">
+      {/* max-w-5xl (no 4xl como el resto): con la columna "#" la tabla no
+          entraba y las acciones de la derecha quedaban fuera de vista. */}
+      <div className="mx-auto flex max-w-5xl flex-col gap-5">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-montserrat text-xl font-extrabold text-text-primary">
@@ -177,7 +179,7 @@ export function AlumnosPage() {
               className="h-11 w-full rounded-[10px] border border-border-subtle bg-bg-input pl-9 pr-3 font-inter text-base text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-accent-cyan xl:h-10 xl:text-[13px]"
             />
           </div>
-          <div className="sm:w-[280px]">
+          <div className="sm:w-[340px]">
             <PeriodoField
               label="Período de alta"
               value={filtroPeriodo}
@@ -206,7 +208,7 @@ export function AlumnosPage() {
                   {numeroPorId.get(a.id)}
                 </span>
               ),
-              className: 'w-px text-right',
+              className: 'w-px pr-0 text-right',
             },
             { header: 'Alta', accessor: (a) => formatearFecha(a.created_at) },
             { header: 'Apellido y nombre', accessor: (a) => `${a.apellido}, ${a.nombre}` },
